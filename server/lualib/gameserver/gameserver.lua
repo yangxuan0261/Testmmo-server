@@ -48,17 +48,17 @@ function gameserver.start (gamed)
 	local traceback = debug.traceback
 	function handler.message (fd, msg, sz)
 		local queue = pending_msg[fd]
-		if queue then
+		if queue then -- 认证期间有多个数据发送上来，存储到队列中待处理
 			table.insert (queue, { msg = msg, sz = sz })
 		else
 			pending_msg[fd] = {}
 
-			local ok, account = xpcall (do_login, traceback, fd, msg, sz)
+			local ok, account = xpcall (do_login, traceback, fd, msg, sz) -- 去登陆服认证
 			if ok then
 				syslog.noticef ("account %d login success", account)
 				local agent = gamed.login_handler (fd, account)
 				queue = pending_msg[fd]
-				for _, t in pairs (queue) do
+				for _, t in pairs (queue) do -- 待处理消息逐一处理
 					syslog.noticef ("forward pending message to agent %d", agent)
 					skynet.rawcall(agent, "client", t.msg, t.sz)
 				end

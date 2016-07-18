@@ -3,7 +3,7 @@ local sharemap = require "sharemap"
 
 local syslog = require "syslog"
 local handler = require "agent.handler"
-local dump = require "print_r"
+-- local dump = require "print_r"
 
 
 local RESPONSE = {}
@@ -104,9 +104,9 @@ local function refresh_aoi (id, scope) -- 刷新对应id的角色属性
 
 	syslog.debugf ("--- dirty(%s) wantmore(%s)", t.dirty, t.wantmore)
     -- 如果wantmore标记也为true，则下行给客户端整个角色的信息
-	if t.dirty and t.wantmore then
+	if t.dirty --[[and t.wantmore -- 暂时不用这个标记]] then
 		c:update () -- 更新character数据
-
+        dump(c.movement.pos, "other move")
 		user.send_request (scope2proto[scope], { character = c })
 		t.wantmore = false
 		t.dirty = false
@@ -201,6 +201,7 @@ function CMD.aoi_manage (alist, rlist, ulist, scope)
 		character_writer:commit () --
 	end
 
+    -- syslog.debugf ("--- self agent:%d", skynet.self()) 
     if alist then
         dump(alist, "--- aoi_manage, alist")
     end

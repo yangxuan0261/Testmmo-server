@@ -14,6 +14,10 @@ local function make_key (name)
 	return connection_handler (name), string.format ("user:%s", name)
 end
 
+local function make_account_key (account)
+    return connection_handler (account), string.format ("user:%d", account)
+end
+
 function account.load (name)
 	assert (name)
 
@@ -41,6 +45,17 @@ function account.create (id, name, password)
 	assert (connection:hmset (key, "salt", salt, "verifier", verifier) ~= 0, "save account verifier failed")
 
 	return id
+end
+
+function account.loadInfo( account )
+    assert (account)
+    local connection, key = make_account_key (account)
+    return connection:hget (key, "info")
+end
+
+function account.saveInfo( account, json )
+    local connection, key = make_account_key (account)
+    assert (connection:hset (key, "info", json) ~= 0, "saveInfo failed")
 end
 
 return account

@@ -3,7 +3,7 @@ local sharedata = require "sharedata"
 
 local syslog = require "syslog"
 local handler = require "agent.handler"
-local dump = require "print_r"
+-- local dump = require "print_r"
 
 
 local REQUEST = {}
@@ -46,8 +46,22 @@ local function gmPackArgs( _fn, _args )
 
     elseif _fn == "character_list" then
 
-    elseif _fn == "character_list" then
+    elseif _fn == "labor_create" then
+        argTab = {
+            name = _args[1],
+        }
 
+    elseif _fn == "labor_list" then
+
+    elseif _fn == "labor_chat" then
+        argTab = {
+            msg = _args[1],
+        }
+
+    elseif _fn == "labor_join" then
+        argTab = {
+            id = tonumber(_args[1]),
+        }
     end
 
 
@@ -67,7 +81,7 @@ local function gmExecute( gmStr )
     dump(argTab, "gmPackArgs")
     f(argTab)
 
-    user.send_request ("tips", { content = funcName.." success!!" })
+    -- user.send_request ("tips", { content = funcName.." success!!" })
 end
 
 function REQUEST.gm (args)

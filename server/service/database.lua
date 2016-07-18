@@ -4,6 +4,7 @@ local redis = require "redis"
 local config = require "config.database" -- 数据库配置文件
 local account = require "db.account"
 local character = require "db.character"
+local labor = require "db.labor"
 
 local center
 local group = {}
@@ -46,7 +47,8 @@ local traceback = debug.traceback
 
 skynet.start (function ()
 	module_init ("account", account) -- 不同模块分开处理
-	module_init ("character", character)
+    module_init ("character", character)
+	module_init ("labor", labor)
 
 	center = redis.connect (config.center)
 	ngroup = #config.group

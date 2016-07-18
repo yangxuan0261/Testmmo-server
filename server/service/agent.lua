@@ -1,3 +1,4 @@
+require "functions"
 local skynet = require "skynet"
 local queue = require "skynet.queue"
 local sharemap = require "sharemap"
@@ -11,12 +12,16 @@ local aoi_handler = require "agent.aoi_handler"
 local move_handler = require "agent.move_handler"
 local combat_handler = require "agent.combat_handler"
 local gm_handler = require "agent.gm_handler"
+local labor_handler = require "agent.labor_handler"
+local dbpacker = require "db.packer"
 
 
 local gamed = tonumber (...)
 local database
 
 local host, proto_request = protoloader.load (protoloader.GAME)
+
+local DefaultName = "Tim"
 
 --[[
 .user {
@@ -139,12 +144,25 @@ skynet.register_protocol { -- 注册与客户端交互的协议
 local CMD = {}
 
 function CMD.open (fd, account)
-	local name = string.format ("agent:%d", account)
 	syslog.debug ("-------- agent opened:"..account)
+    database = skynet.uniqueservice ("database")
+
+    local info = skynet.call (database, "lua", "account", "loadInfo", account)
+    if info then
+        info = dbpacker.unpack(info)
+    else
+        info = {
+            account = account,
+            nickName = DefaultName,
+            laborId = nil,
+        }
+    end
+    dump(info, "--- agent info")
 
 	user = { 
 		fd = fd, 
 		account = account,
+        info = info,
 		REQUEST = {},
 		RESPONSE = {},
 		CMD = CMD,
@@ -153,19 +171,26 @@ function CMD.open (fd, account)
 	user_fd = user.fd
 	REQUEST = user.REQUEST
 	RESPONSE = user.RESPONSE
-	
+
     character_handler:register (user)
+    labor_handler:register(user)
 
     -- gm register
     gm_handler:register(user)
 
 	last_heartbeat_time = skynet.now () -- 开启心跳
 	heartbeat_check ()
+
+    local chatserver = skynet.uniqueservice ("chatserver")
+    skynet.fork(function()
+        skynet.call (chatserver, "lua", "join", user.account, user_fd)
+    end)
 end
 
 function CMD.close ()
-	syslog.debugf ("--- agent closed, traceback:"..debug.traceback())
-	
+	-- syslog.debugf ("--- agent closed, traceback:"..debug.traceback())
+    syslog.debugf ("--- agent closed, traceback:")
+
 	local account
 	if user then
 		account = user.account
@@ -183,18 +208,27 @@ function CMD.close ()
 			skynet.call (user.world, "lua", "character_leave", user.character.id)
 			user.world = nil
 		end
+        -- dump(user.info, "--- userInfo")
+        local json = dbpacker.pack(user.info)
+        skynet.call (database, "lua", "account", "saveInfo", account, json)
 
 		character_handler.save (user.character) -- 保存角色数据
 
         character_handler:unregister (user)
+        labor_handler:unregister(user)
         gm_handler:unregister(user)
 
 		user = nil
 		user_fd = nil
 		REQUEST = nil
 	end
+
+    local chatserver = skynet.uniqueservice ("chatserver")
+    skynet.fork(function()
+        skynet.call (chatserver, "lua", "leave")
+    end)
     -- 通知服务器关掉这个agent的socket
-	skynet.call (gamed, "lua", "close", skynet.self (), account) 
+	skynet.call (gamed, "lua", "close", skynet.self (), account)
 end
 
 function CMD.kick ()

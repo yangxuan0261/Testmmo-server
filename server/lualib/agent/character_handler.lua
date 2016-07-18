@@ -5,8 +5,7 @@ local syslog = require "syslog"
 local dbpacker = require "db.packer"
 local handler = require "agent.handler"
 local uuid = require "uuid"
-local dump = require "print_r"
-
+-- local dump = require "print_r"
 
 local REQUEST = {}
 handler = handler.new (REQUEST)
@@ -44,14 +43,13 @@ function REQUEST.character_list ()
     syslog.debugf("--- REQUEST.character_list, account:"..user.account)
 	local list = load_list (user.account)
 	local character = {}
-    -- dump(list)
 	for _, id in pairs (list) do
         syslog.debugf ("---- REQUEST.character_list, id:%d", id )
 		local c = skynet.call (database, "lua", "character", "load", id)
 
 		if c then
              local charData = dbpacker.unpack (c)
-            dump(charData)
+            -- dump(charData)
 			character[id] = charData
 		end
 	end

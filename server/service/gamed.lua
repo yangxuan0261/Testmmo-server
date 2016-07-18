@@ -24,6 +24,11 @@ function gamed.open (config)
 
 	skynet.uniqueservice ("gdd")
 	skynet.uniqueservice ("world")
+
+    local chatserver = skynet.uniqueservice ("chatserver")
+    skynet.call (chatserver, "lua", "open")
+    local laborserver = skynet.uniqueservice ("laborserver")
+    skynet.call (laborserver, "lua", "open")
 end
 
 function gamed.command_handler (cmd, ...)
