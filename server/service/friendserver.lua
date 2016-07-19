@@ -41,11 +41,11 @@ local function saveAddInfo(_srcAcc, _dstAcc, _flag)
         flag = _flag,
     }
     local json = dbpacker.pack(addInfo)
-    skynet.call(database, "lua", "account", "saveFriend", _srcAcc, _dstAcc, json)
+    skynet.call(database, "lua", "friend", "saveFriend", _srcAcc, _dstAcc, json)
 end
 
 local function loadAddInfo(_srcAcc, _dstAcc)
-    local json = skynet.call(database, "lua", "account", "loadFreind", _srcAcc, _dstAcc)
+    local json = skynet.call(database, "lua", "friend", "loadFreind", _srcAcc, _dstAcc)
     if json then
         return true, dbpacker.unpack(json)
     end
@@ -59,20 +59,13 @@ end
 
 function CMD.online(source, _acc)
     local tmp = {}
-    local friends = skynet.call(database, "lua", "account", "loadFreindList")
+    local friends = skynet.call(database, "lua", "friend", "loadFreindList", _acc)
     dump(friends, "--- friends")
     if friends then
         for _,v in pairs(friends) do
             v = dbpacker.unpack(v)
             tmp[v.account] = v
             onlineNotify(v.account, "friend_onlineNty", _acc, FlagOnline)
-            -- local friInfo = friendTab[v.account]
-            -- modify in friend flag
-            -- if friInfo and friInfo["online"] == FlagOnline then
-                -- tmp[v.account]["online"] = FlagOnline
-                -- friInfo["friends"][_acc]["online"] = FlagOnline
-                -- skynet.call(friInfo["agent"], "lua", friend_onlineNty, _acc, FlagOnline)
-            -- end
         end
     end
 
@@ -135,8 +128,8 @@ function CMD.del(source, _srcAcc, _dstAcc)
     local dstInfo = friInfo["friends"][_dstAcc]
     assert(dstInfo, string.format("Error, not found account:%d", _dstAcc))
 
-    local b1 = skynet.call(database, "lua", "account", "delFreind", _srcAcc, _dstAcc)
-    local b2 = 1 skynet.call(database, "lua", "account", "delFreind", _srcAcc, _dstAcc)
+    local b1 = skynet.call(database, "lua", "friend", "delFreind", _srcAcc, _dstAcc)
+    local b2 = skynet.call(database, "lua", "friend", "delFreind", _srcAcc, _dstAcc)
     assert(b1 and b2, "Error, freind del")
 end
 

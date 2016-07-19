@@ -23,6 +23,10 @@ local function make_account_key (account)
     return connection_handler (account), string.format ("user:%d", account)
 end
 
+local function make_accInfo_key (account)
+    return connection_handler (account), string.format ("user:%s_%d", "info", account)
+end
+
 local function make_friend_key (account)
     return connection_handler (account), string.format ("user:%s_%d", "friends", account)
 end
@@ -60,7 +64,7 @@ end
 
 function account.savelist (account)
     connection, key = make_list_key ()
-    connection:sadd (key, id)
+    connection:sadd (key, account)
 end
 
 function account.loadlist ()
@@ -69,35 +73,14 @@ function account.loadlist ()
 end
 
 function account.loadInfo( account )
-    assert (account)
-    local connection, key = make_account_key (account)
+    local connection, key = make_accInfo_key (account)
     return connection:hget (key, "info")
 end
 
 function account.saveInfo( account, json )
-    local connection, key = make_account_key (account)
+    local connection, key = make_accInfo_key (account)
     assert (connection:hset (key, "info", json) ~= 0, "saveInfo failed")
-end
-
-function account.saveFriend( account, friend, data )
-    local connection, key = make_friend_key (account)
-    assert (connection:hset (key, friend, data) ~= 0, "saveFriend failed")
-end
-
-function account.delFreind( account, friend )
-    local connection, key = make_friend_key (account)
-    assert (connection:hdel (key, friend) ~= 0, "delFreind failed")
     return true
-end
-
-function account.loadFreind( account, friend )
-    local connection, key = make_friend_key (account)
-    return connection:hget (key, friend)
-end
-
-function account.loadFreindList( account )
-    local connection, key = make_friend_key (account)
-    return connection:hvals (key) or {}
 end
 
 return account
