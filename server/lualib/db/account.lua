@@ -69,17 +69,17 @@ end
 
 function account.loadlist ()
     connection, key = make_list_key ()
-    return connection:smembers (key)
+    return connection:smembers (key) or {}
 end
 
 function account.loadInfo( account )
     local connection, key = make_accInfo_key (account)
-    return connection:hget (key, "info")
+    return connection:get (key)
 end
 
 function account.saveInfo( account, json )
     local connection, key = make_accInfo_key (account)
-    assert (connection:hset (key, "info", json) ~= 0, "saveInfo failed")
+    assert (connection:set (key, json) ~= 0, "saveInfo failed")
     return true
 end
 

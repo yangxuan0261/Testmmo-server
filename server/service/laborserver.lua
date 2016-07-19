@@ -19,12 +19,10 @@ function CMD.open (source, conf)
     syslog.debugf("--- labor server open")
 
     database = skynet.uniqueservice ("database")
-    local dataTab = skynet.call (database, "lua", "labor", "list")
-    if not dataTab then
-        dataTab = {}
-    end
+    local dataTab = skynet.call (database, "lua", "labor", "loadlist")
 
-    for k,v in pairs(dataTab) do
+    for _,v in pairs(dataTab) do
+        v = skynet.call (database, "lua", "labor", "loadInfo", v)
         v = dbpacker.unpack(v) -- decode json
         laborTab[v.id] = v
     end
@@ -49,7 +47,7 @@ function CMD.create(source, _account, _laborName)
     dump(laborInfo, "labor_create")
 
     local json = dbpacker.pack (laborInfo)
-    local id = skynet.call (database, "lua", "labor", "save", laborInfo.id, json)
+    local id = skynet.call (database, "lua", "labor", "saveInfo", laborInfo.id, json)
     syslog.debugf("--- create labor success, id:%d", id)
 
     laborTab[id] = laborInfo
@@ -69,7 +67,7 @@ function CMD.join(source, _account, _laborId)
     labor["members"][_account] = account
 
     local json = dbpacker.pack (labor)
-    local id = skynet.call (database, "lua", "labor", "save", _laborId, json)
+    local id = skynet.call (database, "lua", "labor", "saveInfo", _laborId, json)
 
     return labor.name
 end
@@ -79,7 +77,7 @@ function CMD.leave(source, _account, _laborId)
     assert(labor, "Error, leave labor fail")
     labor["members"][_account] = nil
     local json = dbpacker.pack (labor)
-    local id = skynet.call (database, "lua", "labor", "save", _laborId, json)
+    local id = skynet.call (database, "lua", "labor", "saveInfo", _laborId, json)
     return labor.name
 end
 
@@ -112,7 +110,7 @@ end
 function CMD.get_members (source, id)
     local labor = laborTab[id]
     assert(labor, string.format("Error, not found labor, id:%d", id))
-    return labor.members
+    return labor["members"]
 end
 
 function CMD.broad (source, id, _account, _msg)
