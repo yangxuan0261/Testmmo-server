@@ -31,7 +31,5 @@
 *.pid
 
 # other files
-var/
 client/anonymous
 /3rd
-/tool
