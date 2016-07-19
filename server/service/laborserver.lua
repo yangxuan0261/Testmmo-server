@@ -5,14 +5,10 @@ local uuid = require "uuid"
 -- local dump = require "print_r"
 local dbpacker = require "db.packer"
 
+local FlagOffline = 0
+local FlagOnline = 1
+
 -- local gamed = tonumber (...)
-
-local agentTab = {}
-local accountTab = {}
-
-local friendHandler
-local laborHandler
-local worldHandler
 
 local laborTab = {}
 
@@ -36,10 +32,11 @@ function CMD.open (source, conf)
 end
 
 function CMD.create(source, _account, _laborName)
-    local account = {}
-    account["account"] = _account -- acc
-    account["online"] = 1        -- online
-    account["agent"] = source
+    local account = {
+        account = _account,
+        online = FlagOnline,
+        agent = source,
+        }
 
     local laborInfo = {
             id = uuid.gen(),
@@ -48,6 +45,7 @@ function CMD.create(source, _account, _laborName)
             members = {}
         }
     laborInfo["members"][_account] = account -- insert creater
+
     dump(laborInfo, "labor_create")
 
     local json = dbpacker.pack (laborInfo)
@@ -63,11 +61,12 @@ function CMD.join(source, _account, _laborId)
     local labor = laborTab[_laborId]
     assert(labor, "Error, join labor fail")
 
-    local account = {}
-    account["account"] = _account
-    account["online"] = 1
-    account["agent"] = source
-    labor.members[_account] = account
+    local account = {
+        account = _account,
+        online = FlagOnline,
+        agent = source,
+        }
+    labor["members"][_account] = account
 
     local json = dbpacker.pack (labor)
     local id = skynet.call (database, "lua", "labor", "save", _laborId, json)
@@ -78,7 +77,7 @@ end
 function CMD.leave(source, _account, _laborId)
     local labor = laborTab[_laborId]
     assert(labor, "Error, leave labor fail")
-    labor.members[_account] = nil
+    labor["members"][_account] = nil
     local json = dbpacker.pack (labor)
     local id = skynet.call (database, "lua", "labor", "save", _laborId, json)
     return labor.name
@@ -91,8 +90,8 @@ function CMD.online(source, _account, _laborId)
 
     local labor = laborTab[_laborId]
     assert(labor, "Error, labor online fail")
-    labor.members[_account]["online"] = 1
-    labor.members[_account]["agent"] = source
+    labor["members"][_account]["online"] = FlagOnline
+    labor["members"][_account]["agent"] = source
 end
 
 function CMD.offline(source, _account, _laborId)
@@ -102,8 +101,8 @@ function CMD.offline(source, _account, _laborId)
 
     local labor = laborTab[_laborId]
     assert(labor, "Error, labor offline fail")
-    labor.members[_account]["online"] = 0
-    labor.members[_account]["agent"] = nil
+    labor["members"][_account]["online"] = FlagOffline
+    labor["members"][_account]["agent"] = nil
 end
 
 function CMD.list (source, id)
@@ -112,7 +111,7 @@ end
 
 function CMD.get_members (source, id)
     local labor = laborTab[id]
-    assert(labor, "Error, not found labor, id:"..id)
+    assert(labor, string.format("Error, not found labor, id:%d", id))
     return labor.members
 end
 
@@ -120,7 +119,7 @@ function CMD.broad (source, id, _account, _msg)
     local function sendMsg( ... )
         local members = CMD.get_members(nil, id)
         for _,v in pairs(members) do
-            if v["online"] then
+            if v["online"] == FlagOnline then
                 skynet.call (v["agent"], "lua", "labor_sendChat", _account, _msg)
             end
         end
@@ -140,11 +139,9 @@ skynet.start (function ()
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
             syslog.warningf ("handle message(%s) failed : %s", command, ret)
-            kick_self ()
+            -- kick_self ()
             return skynet.ret ()
         end
         skynet.retpack (ret)
     end)
 end)
-
-

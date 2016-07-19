@@ -29,6 +29,8 @@ function gamed.open (config)
     skynet.call (chatserver, "lua", "open")
     local laborserver = skynet.uniqueservice ("laborserver")
     skynet.call (laborserver, "lua", "open")
+    local friendserver = skynet.uniqueservice ("friendserver")
+    skynet.call (friendserver, "lua", "open")
 end
 
 function gamed.command_handler (cmd, ...)

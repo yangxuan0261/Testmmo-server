@@ -12,6 +12,8 @@ local aoi_handler = require "agent.aoi_handler"
 local move_handler = require "agent.move_handler"
 local combat_handler = require "agent.combat_handler"
 local gm_handler = require "agent.gm_handler"
+local world_handler = require "agent.world_handler"
+local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
 local dbpacker = require "db.packer"
 
@@ -174,6 +176,8 @@ function CMD.open (fd, account)
 
     character_handler:register (user)
     labor_handler:register(user)
+    friend_handler:register(user)
+    world_handler:register(user)
 
     -- gm register
     gm_handler:register(user)
@@ -181,9 +185,14 @@ function CMD.open (fd, account)
 	last_heartbeat_time = skynet.now () -- 开启心跳
 	heartbeat_check ()
 
-    local chatserver = skynet.uniqueservice ("chatserver")
+    -- get in
     skynet.fork(function()
-        skynet.call (chatserver, "lua", "join", user.account, user_fd)
+        local chatserver = skynet.uniqueservice ("chatserver")
+        local friendserver = skynet.uniqueservice ("friendserver")
+        local laborserver = skynet.uniqueservice ("laborserver")
+        skynet.call (chatserver, "lua", "online", user.account)
+        skynet.call (friendserver, "lua", "online", user.account)
+        skynet.call (laborserver, "lua", "online", user.account)
     end)
 end
 
@@ -212,10 +221,22 @@ function CMD.close ()
         local json = dbpacker.pack(user.info)
         skynet.call (database, "lua", "account", "saveInfo", account, json)
 
+            -- get in
+        skynet.fork(function()
+            local chatserver = skynet.uniqueservice ("chatserver")
+            local friendserver = skynet.uniqueservice ("friendserver")
+            local laborserver = skynet.uniqueservice ("laborserver")
+            skynet.call (chatserver, "lua", "offline", user.account)
+            skynet.call (friendserver, "lua", "offline", user.account)
+            skynet.call (laborserver, "lua", "offline", user.account)
+        end)
+
 		character_handler.save (user.character) -- 保存角色数据
 
         character_handler:unregister (user)
         labor_handler:unregister(user)
+        friend_handler:unregister(user)
+        world_handler:unregister(user)
         gm_handler:unregister(user)
 
 		user = nil

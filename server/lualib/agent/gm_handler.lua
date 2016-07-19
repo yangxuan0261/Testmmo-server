@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local sharedata = require "sharedata"
+local dbpacker = require "db.packer"
 
 local syslog = require "syslog"
 local handler = require "agent.handler"
@@ -64,13 +65,12 @@ local function gmPackArgs( _fn, _args )
         }
     end
 
-
     return argTab
 end
 
 local function gmExecute( gmStr )
     syslog.debugf ("--- gm command:%s", gmStr)
-    local funcName, argTab = gmParser(gmStr)
+    local funcName, argTab, retFunc = gmParser(gmStr)
     syslog.debugf ("--- gm func:%s", funcName)
     -- dump(argTab, "gmParser")
 
@@ -79,15 +79,23 @@ local function gmExecute( gmStr )
 
     argTab = gmPackArgs(funcName, argTab)
     dump(argTab, "gmPackArgs")
-    f(argTab)
+    local ret = f(argTab)
 
-    -- user.send_request ("tips", { content = funcName.." success!!" })
+    local b = retFunc and ret and type(ret) == "table"
+    if not b then
+        syslog.debugf("dont neet return, request:%s", funcName)
+        return
+    end
+
+    return { func = retFunc, data = dbpacker.packer(ret)}
+        -- user.send_request (, { content = funcName.." success!!" })
 end
 
 function REQUEST.gm (args)
     local gmStr = args.gmStr
     assert(#gmStr > 0, "Error: empty gm command")
-    skynet.fork (function () gmExecute(gmStr) end)
+    return gmExecute(gmStr)
+    -- skynet.fork (function () gmExecute(gmStr) end)
 end
 
 return handler

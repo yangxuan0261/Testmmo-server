@@ -1,89 +1,51 @@
 require "functions"
 local skynet = require "skynet"
 local syslog = require "syslog"
-local socket = require "socket"
-local protoloader = require "protoloader"
+local dbpacker = require "db.packer"
 
-local FriendChat = require "chat.friendChat"
-local LaborChat = require "chat.laborChat"
-local WorldChat = require "chat.worldChat"
--- local gamed = tonumber (...)
+local FlagOffline = 0
+local FlagOnline = 1
 
-local agentTab = {}
-local accountTab = {}
+local onlineTab = {}
+local table_insert = table.insert
 
-local ChatServer = {}
-ChatServer.agentTab = agentTab 
-ChatServer.accountTab = accountTab 
-
-local friendHandler
-local laborHandler
-local worldHandler
-
---------------- send begin --------------
-
-local _, proto_request = protoloader.load (protoloader.GAME)
-
-local function send_msg (fd, msg)
-    local package = string.pack (">s2", msg)
-    socket.write (fd, package)
-end
-
--- local session = {}
-local session_id = 0
-local function send_request (user_fd, name, args)
-    session_id = session_id + 1
-    local str = proto_request (name, args, session_id)
-    send_msg (user_fd, str)
-    -- session[session_id] = { name = name, args = args }
-end
-ChatServer.send = send_request
---------------- send end --------------
-
+local database
 
 local CMD = {}
 function CMD.open (source, conf)
-    syslog.debugf("--- chat server open")
-    friendHandler = FriendChat.new(ChatServer)
-    laborHandler = LaborChat.new(ChatServer)
-    worldHandler = WorldChat.new(ChatServer)
+    syslog.debugf("--- friend server open")
+    database = skynet.uniqueservice ("database")
 end
 
-function CMD.join( _agent, _account, _fd )
-
-    local _friList = {} -- redis get friends
-    local _labor = 0 -- redis get labor
-
-    local info = {
-        agent = _agent,
-        account = _account,
-        fd = _fd,
-        labor = _labor,
-        friendList = _friList, 
+function CMD.online(source, _acc)
+    local accInfo = {
+        account = _acc,
+        agent = source,
+        online = FlagOnline,
     }
-
-    agentTab[_agent] = info
-    accountTab[_account] = info
+    onlineTab[_acc] = accInfo
 end
 
-function CMD.leave( _agent )
-    local info = agentTab[_agent]
-    assert(info, "Error: CMD.leave, agent:".._agent)
+function CMD.offline(source, _acc)
+    local accInfo = onlineTab[_acc]
+    assert(accInfo, string.format("Error, not found account:%d", _acc))
 
-    agentTab[_agent] = nil
-    accountTab[info.account] = nil
+    onlineTab[_acc] = nil
 end
 
-function CMD.friendChat( _agent, _friend, _msg )
-    local friInfo = accountTab[_friend]
+function CMD.getOnline(source)
+    return onlineTab
 end
 
-function CMD.laborChat( _agent, _msg )
-    
-end
-
-function CMD.worldChat( _agent )
-
+function CMD.broad(source, _acc, _msg)
+    local function sendMsg( ... )
+        local accInfo = onlineTab[_acc]
+        assert(accInfo, string.format("Error, not found account:%d", _acc))
+        for _,v in pairs(onlineTab) do
+            skynet.call(v["agent"], "lua", "world_sendChat", _acc, _msg)
+        end
+    end
+    skynet.fork(sendMsg)
 end
 
 local traceback = debug.traceback
@@ -98,11 +60,9 @@ skynet.start (function ()
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
             syslog.warningf ("handle message(%s) failed : %s", command, ret)
-            kick_self ()
+            -- kick_self ()
             return skynet.ret ()
         end
         skynet.retpack (ret)
     end)
 end)
-
-
