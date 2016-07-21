@@ -63,13 +63,17 @@ local function gmPackArgs( _fn, _args )
         argTab = {
             id = tonumber(_args[1]),
         }
+
+    elseif _fn == "world_accountList" then
+
     end
 
     return argTab
 end
 
-local function gmExecute( gmStr )
-    syslog.debugf ("--- gm command:%s", gmStr)
+local function gmExecute(_data)
+    syslog.debugf ("--- gm command:%s", _data)
+    --[[
     local funcName, argTab, retFunc = gmParser(gmStr)
     syslog.debugf ("--- gm func:%s", funcName)
     -- dump(argTab, "gmParser")
@@ -89,12 +93,13 @@ local function gmExecute( gmStr )
 
     return { func = retFunc, data = dbpacker.packer(ret)}
         -- user.send_request (, { content = funcName.." success!!" })
+]]
 end
 
 function REQUEST.gm (args)
+    assert(args.data and #args.data > 0, "Error: empty gm")
     local gmStr = args.gmStr
-    assert(#gmStr > 0, "Error: empty gm command")
-    return gmExecute(gmStr)
+    return gmExecute(args.data)
     -- skynet.fork (function () gmExecute(gmStr) end)
 end
 

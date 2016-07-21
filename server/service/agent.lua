@@ -186,14 +186,14 @@ function CMD.open (fd, account)
 	heartbeat_check ()
 
     -- get in
-    skynet.fork(function()
+    -- skynet.fork(function()
         local chatserver = skynet.uniqueservice ("chatserver")
         local friendserver = skynet.uniqueservice ("friendserver")
         local laborserver = skynet.uniqueservice ("laborserver")
         skynet.call (chatserver, "lua", "online", user.account)
         skynet.call (friendserver, "lua", "online", user.account)
         skynet.call (laborserver, "lua", "online", user.account)
-    end)
+    -- end)
 end
 
 function CMD.close ()
@@ -221,15 +221,15 @@ function CMD.close ()
         local json = dbpacker.pack(user.info)
         skynet.call (database, "lua", "account", "saveInfo", account, json)
 
-            -- get in
-        skynet.fork(function()
+            -- get out, can fork, user will nil
+        -- skynet.fork(function()
             local chatserver = skynet.uniqueservice ("chatserver")
             local friendserver = skynet.uniqueservice ("friendserver")
             local laborserver = skynet.uniqueservice ("laborserver")
             skynet.call (chatserver, "lua", "offline", user.account)
             skynet.call (friendserver, "lua", "offline", user.account)
             skynet.call (laborserver, "lua", "offline", user.account)
-        end)
+        -- end)
 
 		character_handler.save (user.character) -- 保存角色数据
 
