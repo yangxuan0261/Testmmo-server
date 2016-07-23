@@ -39,7 +39,7 @@ end
 function labor.loadlist ()
     syslog.debugf("--- db, labor.loadlist")
     connection, key = make_list_key ()
-    return connection:smembers (key)
+    return connection:smembers (key) or {}
 end
 
 return labor

@@ -18,6 +18,9 @@ local CMD = {}
 function CMD.open (source, conf)
     syslog.debugf("--- labor server open")
 
+    local moniter = skynet.uniqueservice ("moniter")
+    skynet.call(moniter, "lua", "register", "laborserver")
+
     database = skynet.uniqueservice ("database")
     local dataTab = skynet.call (database, "lua", "labor", "loadlist")
 
@@ -27,6 +30,11 @@ function CMD.open (source, conf)
         laborTab[v.id] = v
     end
     dump(laborTab, "all labor")
+end
+
+function CMD.hear_beat ()
+    print("--- hear_beat laborserver")
+    return 1
 end
 
 function CMD.create(source, _account, _laborName)

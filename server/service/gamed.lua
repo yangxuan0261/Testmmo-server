@@ -16,6 +16,8 @@ local online_account = {}
 function gamed.open (config)
 	syslog.notice ("gamed opened")
 
+    skynet.uniqueservice ("moniter")
+
 	local self = skynet.self ()
 	local n = config.pool or 0
 	for i = 1, n do
