@@ -32,9 +32,8 @@ function CMD.open (source, conf)
     dump(laborTab, "all labor")
 end
 
-function CMD.hear_beat ()
-    print("--- hear_beat laborserver")
-    return 1
+function CMD.heart_beat ()
+    -- print("--- heart_beat laborserver")
 end
 
 function CMD.create(source, _account, _laborName)

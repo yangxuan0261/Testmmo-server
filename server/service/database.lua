@@ -46,6 +46,17 @@ end
 
 local traceback = debug.traceback
 
+local CMD = {}
+function CMD.open()
+    local moniter = skynet.uniqueservice ("moniter")
+    skynet.call(moniter, "lua", "register", "database")
+end
+
+function CMD.heart_beat ()
+    -- print("--- heart_beat database")
+end
+
+
 skynet.start (function ()
 	module_init ("account", account) -- 不同模块分开处理
     module_init ("character", character)
@@ -59,6 +70,12 @@ skynet.start (function ()
 	end
 
 	skynet.dispatch ("lua", function (_, _, mod, cmd, ...)
+        local thisf = CMD[mod] -- 本服务的cmd方法
+        if thisf then
+            thisf(cmd, ...)
+            return skynet.ret ()
+        end
+
 		local m = MODULE[mod] -- 先找对应模块 character
 		if not m then
 			return skynet.ret ()

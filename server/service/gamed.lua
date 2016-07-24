@@ -16,17 +16,16 @@ local online_account = {}
 function gamed.open (config)
 	syslog.notice ("gamed opened")
 
-    skynet.uniqueservice ("moniter")
-
 	local self = skynet.self ()
 	local n = config.pool or 0
 	for i = 1, n do
 		table.insert (pool, skynet.newservice ("agent", self))
 	end
 
-	skynet.uniqueservice ("gdd")
-	skynet.uniqueservice ("world")
-
+	local gdd = skynet.uniqueservice ("gdd")
+    skynet.call (gdd, "lua", "open")
+	local world = skynet.uniqueservice ("world")
+    skynet.call (world, "lua", "open")
     local chatserver = skynet.uniqueservice ("chatserver")
     skynet.call (chatserver, "lua", "open")
     local laborserver = skynet.uniqueservice ("laborserver")

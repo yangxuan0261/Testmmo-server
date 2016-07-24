@@ -5,9 +5,13 @@ local login_config = require "config.loginserver"
 local game_config = require "config.gameserver"
 
 skynet.start(function()
+    skynet.uniqueservice ("moniter")
+
 	skynet.newservice ("debug_console", config.debug_port)
-	skynet.newservice ("protod")
-	skynet.uniqueservice ("database")
+	local protod = skynet.newservice ("protod")
+    skynet.call (protod, "lua", "open")  
+	local database = skynet.uniqueservice ("database")
+    skynet.call (database, "lua", "open")  
 
 	local loginserver = skynet.newservice ("loginserver")
 	skynet.call (loginserver, "lua", "open", login_config)	

@@ -52,18 +52,6 @@ local function loadAddInfo(_srcAcc, _dstAcc)
 end
 
 local CMD = {}
-function CMD.open (source, conf)
-    syslog.debugf("--- friend server open")
-    database = skynet.uniqueservice ("database")
-    local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "friendserver")
-end
-
-function CMD.hear_beat ()
-    print("--- hear_beat friendserver")
-    return 1
-end
-
 function CMD.online(source, _acc)
     local tmp = {}
     local friends = skynet.call(database, "lua", "friend", "loadFreindList", _acc)
@@ -160,9 +148,20 @@ function CMD.broad(source, _srcAcc, _dstAcc, _msg)
     skynet.fork(sendMsg)
 end
 
+function CMD.open (source, conf)
+    syslog.debugf("--- friend server open")
+    database = skynet.uniqueservice ("database")
+    local moniter = skynet.uniqueservice ("moniter")
+    skynet.call(moniter, "lua", "register", "friendserver")
+end
+
+function CMD.heart_beat ()
+    -- print("--- heart_beat friendserver")
+end
+
 local traceback = debug.traceback
 skynet.start (function ()
-    skynet.timeout (800, function() skynet.exit() end)
+    -- skynet.timeout (800, function() skynet.exit() end) -- for test moniter
 
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
