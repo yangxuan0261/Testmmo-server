@@ -13,7 +13,7 @@ end
 
 -- 服务宕机，发邮件通知
 local function serviceDump(_serName)
-    syslog.debugf("--- Error: service 【%s】 dump!", _serName)
+    syslog.errf("--- Error: service 【%s】 dump!", _serName)
 end
 
 local function callService(_addr)
@@ -24,17 +24,17 @@ end
 检测各个服务是否宕机
 ]]
 local function heartBeatScheduler()
-    syslog.debugf("---------- 【heart beat Begin】 ----------")
+    -- syslog.debugf("---------- 【heart beat Begin】 ----------")
     for k,v in pairs(serTab) do
         local ok, _ = xpcall (callService, traceback, k)
         if not ok then
             serviceDump(v)
             serTab[k] = nil
         else
-            syslog.debugf("--- service running:【%s】, addr:%x", v, k)
+            -- syslog.debugf("--- service running:【%s】, addr:%x", v, k)
         end
     end
-    syslog.debugf("---------- 【heart beat End】 ----------")
+    -- syslog.debugf("---------- 【heart beat End】 ----------")
 
     skynet.timeout(IntervalTime, heartBeatScheduler)
 end

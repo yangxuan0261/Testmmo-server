@@ -33,6 +33,7 @@ end
 
 local function gmPackArgs( _fn, _args )
     local argTab = {}
+    local retFunc = ""
     if _fn == "character_delete" then
         argTab = { id = tonumber(_args[1]) }
 
@@ -65,15 +66,13 @@ local function gmPackArgs( _fn, _args )
         }
 
     elseif _fn == "world_accountList" then
-
+        retFunc = "helloFunc"
     end
 
-    return argTab
+    return argTab, retFunc
 end
 
-local function gmExecute(_data)
-    syslog.debugf ("--- gm command:%s", _data)
-    --[[
+local function gmExecute(gmStr)
     local funcName, argTab, retFunc = gmParser(gmStr)
     syslog.debugf ("--- gm func:%s", funcName)
     -- dump(argTab, "gmParser")
@@ -81,7 +80,7 @@ local function gmExecute(_data)
     local f = user.REQUEST[funcName] -- search request func
     assert(f, "Error: not found func:"..funcName)
 
-    argTab = gmPackArgs(funcName, argTab)
+    argTab, retFunc = gmPackArgs(funcName, argTab)
     dump(argTab, "gmPackArgs")
     local ret = f(argTab)
 
@@ -93,13 +92,12 @@ local function gmExecute(_data)
 
     return { func = retFunc, data = dbpacker.packer(ret)}
         -- user.send_request (, { content = funcName.." success!!" })
-]]
 end
 
 function REQUEST.gm (args)
-    assert(args.data and #args.data > 0, "Error: empty gm")
-    local gmStr = args.gmStr
-    return gmExecute(args.data)
+    local gmStr = args.data
+    assert(gmStr and #gmStr > 0, "Error: empty gm")
+    return gmExecute(gmStr)
     -- skynet.fork (function () gmExecute(gmStr) end)
 end
 
