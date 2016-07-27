@@ -26,7 +26,6 @@ end
 
 local FlagOnline = 1
 function REQUEST.world_accountList ()
-    local ret = {}
     local allList = skynet.call(database, "lua", "account", "loadlist")
     local onlineList = skynet.call(chatserver, "lua", "getOnline")
     if allList and #allList > 0 then
@@ -41,7 +40,7 @@ function REQUEST.world_accountList ()
         end
     end
     dump(onlineList, "--- world_accountList")
-    return ret
+    return onlineList
 end
 
 function CMD.world_sendChat( _account, _msg )

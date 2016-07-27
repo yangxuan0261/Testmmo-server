@@ -81,8 +81,8 @@ local function gmExecute(gmStr)
     assert(f, "Error: not found func:"..funcName)
 
     argTab, retFunc = gmPackArgs(funcName, argTab)
-    dump(argTab, "gmPackArgs")
     local ret = f(argTab)
+    dump(ret, "--- ret")
 
     local b = retFunc and ret and type(ret) == "table"
     if not b then
@@ -90,7 +90,7 @@ local function gmExecute(gmStr)
         return
     end
 
-    return { func = retFunc, data = dbpacker.packer(ret)}
+    return { func = retFunc, data = dbpacker.pack(ret)}
         -- user.send_request (, { content = funcName.." success!!" })
 end
 
