@@ -119,7 +119,9 @@ function CMD.auth (fd, addr)
 	assert (name == "challenge")
 	assert (args and args.session and args.challenge)
 
-	local token, challenge = skynet.call (master, "lua", "challenge", args.session, args.challenge)
+	local retTab = skynet.call (master, "lua", "challenge", args.session, args.challenge)
+    local token = retTab["token"]
+    local challenge = retTab["challenge"]
 	assert (token and challenge)
 
 	local msg = response {
@@ -152,7 +154,7 @@ function CMD.challenge (session, secret)
 	t.token = srp.random ()
 	t.challenge = srp.random ()
 
-	return t.token, t.challenge
+	return { token = t.token, challenge = t.challenge }
 end
 
 function CMD.verify (session, secret)
