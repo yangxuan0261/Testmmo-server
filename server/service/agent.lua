@@ -194,6 +194,10 @@ function CMD.open (fd, account)
         skynet.call (friendserver, "lua", "online", user.account)
         skynet.call (laborserver, "lua", "online", user.account)
     -- end)
+
+    -- send info to client
+    local json = dbpacker.pack(info)
+    send_request("user_info", { data = json })
 end
 
 function CMD.close ()
@@ -244,10 +248,6 @@ function CMD.close ()
 		REQUEST = nil
 	end
 
-    local chatserver = skynet.uniqueservice ("chatserver")
-    skynet.fork(function()
-        skynet.call (chatserver, "lua", "leave")
-    end)
     -- 通知服务器关掉这个agent的socket
 	skynet.call (gamed, "lua", "close", skynet.self (), account)
 end

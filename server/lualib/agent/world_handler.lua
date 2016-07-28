@@ -24,22 +24,23 @@ function REQUEST.world_chat (args)
     skynet.call(chatserver, "lua", "broad", user.account, args.msg)
 end
 
+local FlagOffline = 0
 local FlagOnline = 1
 function REQUEST.world_accountList ()
     local allList = skynet.call(database, "lua", "account", "loadlist")
     local onlineList = skynet.call(chatserver, "lua", "getOnline")
     if allList and #allList > 0 then
         for _,v in pairs(allList) do
+            v = tonumber(v)
             if not onlineList[v] then
                 local data = {
                     account = v,
-                    online = FlagOnline
+                    online = FlagOffline
                 }
                 onlineList[v] = data
             end
         end
     end
-    dump(onlineList, "--- world_accountList")
     return onlineList
 end
 

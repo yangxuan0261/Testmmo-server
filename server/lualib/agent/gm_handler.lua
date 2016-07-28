@@ -82,7 +82,7 @@ local function gmExecute(gmStr)
 
     argTab, retFunc = gmPackArgs(funcName, argTab)
     local ret = f(argTab)
-    dump(ret, "--- ret")
+    -- dump(ret, "--- ret")
 
     local b = retFunc and ret and type(ret) == "table"
     if not b then
