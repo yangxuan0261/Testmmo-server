@@ -16,6 +16,7 @@ local world_handler = require "agent.world_handler"
 local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
 local dbpacker = require "db.packer"
+local FlagDef = require "config.FlagDef"
 
 
 local gamed = tonumber (...)
@@ -173,6 +174,8 @@ function CMD.open (fd, account)
 	user_fd = user.fd
 	REQUEST = user.REQUEST
 	RESPONSE = user.RESPONSE
+
+    user.FlagDef = FlagDef
 
     character_handler:register (user)
     labor_handler:register(user)

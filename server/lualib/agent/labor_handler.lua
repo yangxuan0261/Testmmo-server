@@ -88,7 +88,15 @@ function CMD.labor_sendChat( _account, _msg )
     if info then
         info = dbpacker.unpack(info)
     end
-    user.send_request ("tips", { content = string.format("【%s】 say:%s", info.nickName, _msg) })
+
+    local msg = {
+        id = info.nickName,
+        msg = _msg,
+    }
+
+    user.send_request ("user_chat", { flag = user.FlagDef.Chat_Labor, data = dbpacker.pack(msg) })
+
+    -- user.send_request ("tips", { content = string.format("【%s】 say:%s", info.nickName, _msg) })
 end
 
 return handler
