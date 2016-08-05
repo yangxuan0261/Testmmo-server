@@ -169,7 +169,7 @@ end
 
 function CMD.open (conf)
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "loginslave")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
 function CMD.heart_beat ()

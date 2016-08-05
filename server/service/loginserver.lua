@@ -14,7 +14,7 @@ local CMD = {}
 
 function CMD.open (conf)
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "loginserver")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 
 	for i = 1, conf.slave do
 		local s = skynet.newservice ("loginslave")

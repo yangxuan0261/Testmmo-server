@@ -16,10 +16,10 @@ local database
 
 local CMD = {}
 function CMD.open (source, conf)
-    syslog.debugf("--- labor server open")
+    syslog.debugf("--- %s open", SERVICE_NAME)
 
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "laborserver")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 
     database = skynet.uniqueservice ("database")
     local dataTab = skynet.call (database, "lua", "labor", "loadlist")

@@ -152,7 +152,7 @@ function CMD.open (source, conf)
     syslog.debugf("--- friend server open")
     database = skynet.uniqueservice ("database")
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "friendserver")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
 function CMD.heart_beat ()

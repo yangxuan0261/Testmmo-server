@@ -6,7 +6,7 @@ local protoloader = require "protoloader"
 local CMD = {}
 function CMD.open()
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "protod")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
 function CMD.heart_beat ()

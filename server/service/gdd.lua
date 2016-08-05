@@ -6,7 +6,7 @@ local syslog = require "syslog"
 local CMD = {}
 function CMD.open ()
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "gdd")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
 function CMD.heart_beat ()

@@ -49,7 +49,7 @@ local traceback = debug.traceback
 local CMD = {}
 function CMD.open()
     local moniter = skynet.uniqueservice ("moniter")
-    skynet.call(moniter, "lua", "register", "database")
+    skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
 function CMD.heart_beat ()
