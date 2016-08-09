@@ -3,7 +3,7 @@ local skynet = require "skynet"
 local gameserver = require "gameserver.gameserver"
 local syslog = require "syslog"
 
-
+local table = table
 local logind = tonumber (...)
 
 local gamed = {}

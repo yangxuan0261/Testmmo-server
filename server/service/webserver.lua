@@ -11,8 +11,6 @@ local string = string
 
 local mode = ...
 
-dump(mode, "--- mode")
-
 if mode == "agent" then
 
 local database

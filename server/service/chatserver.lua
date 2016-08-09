@@ -7,13 +7,13 @@ local FlagOffline = 0
 local FlagOnline = 1
 
 local onlineTab = {}
-local table_insert = table.insert
+local table = table
 
 local database
 
 local CMD = {}
 function CMD.open (source, conf)
-    syslog.debugf("--- friend server open")
+    syslog.debugf("--- chat server open")
     database = skynet.uniqueservice ("database")
 end
 

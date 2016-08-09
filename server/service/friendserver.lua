@@ -15,7 +15,7 @@ local FlagOK = 7
 local FlagOffline = 0
 local FlagOnline = 1
 
-local table_insert = table.insert
+local table = table
 
 local friendTab = {}
 
@@ -136,7 +136,7 @@ function CMD.getFrends(source, _acc)
     for _,v in pairs(friends) do
         local ok, _ = isOnline(v.account)
         local flag = ok and FlagOnline or FlagOffline
-        table_insert(ret, { account = v.account, online = table_insert})
+        table.insert(ret, { account = v.account, online = flag})
     end
     return ret
 end
