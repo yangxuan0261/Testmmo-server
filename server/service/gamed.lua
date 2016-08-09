@@ -22,6 +22,8 @@ function gamed.open (config)
 		table.insert (pool, skynet.newservice ("agent", self))
 	end
 
+    local webserver = skynet.uniqueservice ("webserver")
+    skynet.call (webserver, "lua", "open")
 	local gdd = skynet.uniqueservice ("gdd")
     skynet.call (gdd, "lua", "open")
 	local world = skynet.uniqueservice ("world")
