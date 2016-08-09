@@ -2,14 +2,23 @@ local skynet = require "skynet"
 local socket = require "socket"
 local syslog = require "syslog"
 local httpd = require "http.httpd"
+local dbpacker = require "db.packer"
 local sockethelper = require "http.sockethelper"
 local urllib = require "http.url"
+require "functions"
 local table = table
 local string = string
 
 local mode = ...
 
+dump(mode, "--- mode")
+
 if mode == "agent" then
+
+local database
+skynet.init(function()
+    database = skynet.uniqueservice ("database")
+end)
 
 local function response(id, ...)
     local ok, err = httpd.write_response(sockethelper.writefunc(id), ...)
@@ -44,7 +53,13 @@ skynet.start(function()
                 for k,v in pairs(header) do
                     table.insert(tmp, string.format("%s = %s",k,v))
                 end
-                table.insert(tmp, "-----body----\n" .. body)
+                table.insert(tmp, "-----body----\n" .. body.."\n")
+
+                -- test load data from database
+                local allList = skynet.call(database, "lua", "account", "loadlist")
+                local json = dbpacker.pack(allList)
+                table.insert(tmp, "-----ret data----\n" .. json.."\n")
+
                 response(id, code, table.concat(tmp,"\n"))
             end
         else
