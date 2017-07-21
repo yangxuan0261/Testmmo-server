@@ -44,8 +44,11 @@ local function read (fd, size)
 end
 
 local function read_msg (fd)
+    syslog.debugf ("--- read_msg 111")
 	local s = read (fd, 2)
+    syslog.debugf ("--- read_msg 222")
 	local size = s:byte(1) * 256 + s:byte(2)
+    syslog.debugf ("--- read_msg, size:%d", size)
 	local msg = read (fd, size)
 	return host:dispatch (msg, size)
 end
@@ -67,8 +70,10 @@ function CMD.auth (fd, addr)
 
 	socket.start (fd)
 	socket.limit (fd, 8192)
+    syslog.debugf ("--- CMD.auth 111:")
 
 	local type, name, args, response = read_msg (fd)
+    syslog.debugf ("--- CMD.auth 222:")
 	assert (type == "REQUEST")
 
 	if name == "handshake" then
