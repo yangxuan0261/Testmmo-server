@@ -1,11 +1,7 @@
 [submodule "3rd/skynet"]
 	path = 3rd/skynet
-	url = git@github.com:cloudwu/skynet.git
-	branch = lua53
-[submodule "3rd/redis"]
-	path = 3rd/redis
-	url = git@github.com:antirez/redis.git
-	branch = 2.8
+	url = git@github.com:yangxuan0261/skynet.git
+	branch = date_20170723
 [submodule "3rd/openssl"]
 	path = 3rd/openssl
 	url = git@github.com:openssl/openssl.git
