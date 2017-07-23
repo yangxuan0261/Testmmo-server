@@ -34,3 +34,5 @@
 client/anonymous
 /server/luaclib
 /server/luaclib
+!/3rd/openssl/libs/*.*
+
