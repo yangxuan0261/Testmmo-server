@@ -1,0 +1,23 @@
+local skynet = require "skynet"
+skynet.start(function()
+    print(skynet.starttime())
+    print(skynet.now())
+
+    skynet.timeout(100, function()
+        print("in 1", skynet.now())
+    end)
+    skynet.timeout(200, function()
+        print("in 2", skynet.now())
+    end)
+    skynet.timeout(300, function()
+        print("in 3", skynet.now())
+    end)
+
+    skynet.timeout(400, function()
+        print("in 4", skynet.now())
+    end)
+    skynet.timeout(500, function()
+        print("in 100", skynet.now())
+        skynet.exit()
+    end)
+end)
