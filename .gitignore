@@ -32,6 +32,6 @@
 
 # other files
 client/anonymous
+/server/luaclib
+/server/luaclib
 /3rd
-/server/luaclib
-/server/luaclib
