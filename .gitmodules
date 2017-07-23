@@ -3,3 +3,7 @@
 	url = git@github.com:yangxuan0261/skynet.git
 	branch = date_20170723
     
+[submodule "3rd/openssl"]
+	path = 3rd/openssl
+	url = git@github.com:openssl/openssl.git
+	branch = OpenSSL_1_0_2-stable
