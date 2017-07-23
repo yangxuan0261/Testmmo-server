@@ -1,5 +1,6 @@
 local skynet = require "skynet"
-local sharemap = require "sharemap"
+-- local sharemap = require "sharemap"
+local sharemap = require "skynet.sharemap"
 
 local syslog = require "syslog"
 local handler = require "agent.handler"

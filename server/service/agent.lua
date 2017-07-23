@@ -1,8 +1,10 @@
 require "functions"
 local skynet = require "skynet"
 local queue = require "skynet.queue"
-local sharemap = require "sharemap"
-local socket = require "socket"
+-- local sharemap = require "sharemap"
+local sharemap = require "skynet.sharemap"
+-- local socket = require "socket"
+local socket = require "skynet.socket"
 
 local syslog = require "syslog"
 local protoloader = require "protoloader"

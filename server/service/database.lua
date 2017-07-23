@@ -1,5 +1,6 @@
 local skynet = require "skynet"
-local redis = require "redis"
+-- local redis = require "redis"
+local redis = require "skynet.db.redis"
 
 local config = require "config.database" -- 数据库配置文件
 local account = require "db.account"

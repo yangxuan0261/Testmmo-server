@@ -1,5 +1,6 @@
 local skynet = require "skynet"
-local socket = require "socket"
+-- local socket = require "socket"
+local socket = require "skynet.socket"
 local syslog = require "syslog"
 local httpd = require "http.httpd"
 local dbpacker = require "db.packer"

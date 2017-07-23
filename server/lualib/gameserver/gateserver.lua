@@ -1,6 +1,8 @@
 local skynet = require "skynet"
-local netpack = require "netpack"
-local socketdriver = require "socketdriver"
+-- local netpack = require "netpack"
+local netpack = require "skynet.netpack"
+-- local socketdriver = require "socketdriver"
+local socketdriver = require "skynet.socketdriver"
 
 local syslog = require "syslog"
 

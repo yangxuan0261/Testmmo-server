@@ -1,5 +1,6 @@
 local skynet = require "skynet"
-local sharedata = require "sharedata"
+-- local sharedata = require "sharedata"
+local sharedata = require "skynet.sharedata"
 local syslog = require "syslog"
 local mapdata = require "gddata.map"
 
