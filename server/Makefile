@@ -8,7 +8,7 @@ CJSON_ROOT ?= $(THIRD_LIB_ROOT)lua-cjson
 CJSON_INC ?= ../skynet/3rd/lua
 
 OPENSSL_ROOT ?= $(THIRD_LIB_ROOT)openssl
-OPENSSL_FLAG ?= -I$(OPENSSL_ROOT)/include -L$(OPENSSL_ROOT) -lcrypto
+OPENSSL_FLAG ?= -I$(OPENSSL_ROOT)/include -L$(OPENSSL_ROOT)/libs -lcrypto
 
 
 SKYNET_BUILD_PATH ?= .
