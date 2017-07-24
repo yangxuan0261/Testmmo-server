@@ -128,6 +128,14 @@ local function handle_response (id, args)
 	end
 end
 
+local function my_unpack( ... )
+    return "type" , 111
+end
+
+local function my_dispatch(source, session, type, ...)
+    -- body
+end
+
 skynet.register_protocol { -- 注册与客户端交互的协议
 	name = "client",
 	id = skynet.PTYPE_CLIENT,

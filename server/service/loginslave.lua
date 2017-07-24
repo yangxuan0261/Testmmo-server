@@ -7,6 +7,7 @@ local protoloader = require "protoloader"
 local srp = require "srp"
 local aes = require "aes"
 local uuid = require "uuid"
+local dump = require "print_r"
 
 local traceback = debug.traceback
 
@@ -53,12 +54,41 @@ local function read_msg (fd)
 	local msg = read (fd, size)
 	return host:dispatch (msg, size)
 end
+ 
+local Utils = require "proto_2.utils"
+local msg_define = require "proto_2.msg_define"
+local Packer = require "proto_2.packer"
+
+local function my_read_msg(fd)
+    print("--- my_read_msg begin:")
+    local s = read (fd, 2)
+    local size = s:byte(1) * 256 + s:byte(2)
+    print("--- size:", size)
+    local msg = read (fd, size)
+    local proto_id, params = string.unpack(">Hs2", msg)
+    local proto_name = msg_define.id_2_name(proto_id)
+    local paramTab = Utils.str_2_table(params)
+    print("--- proto_name:", proto_name)
+    print("--- params:", params)
+    return proto_name, paramTab
+end
 
 local function send_msg (fd, msg)
 	local package = string.pack (">s2", msg)
     syslog.debugf ("--- send_msg to client:%d, msg len:%d", fd, #package)
 	socket.write (fd, package)
 end
+
+
+local function my_send_msg (fd, proto_name, msgTab)
+    print("------ my_send_msg:", proto_name)
+    local msg_str = Utils.table_2_str(msgTab)
+    local id = msg_define.name_2_id(proto_name)
+    local len = 2 + 2 + #msg_str
+    local data = string.pack(">HHs2", len, id, msg_str)
+    socket.write (fd, data)
+end
+
 
 function CMD.auth (fd, addr)
 	connection[fd] = addr
@@ -73,9 +103,12 @@ function CMD.auth (fd, addr)
 	socket.limit (fd, 8192)
     syslog.debugf ("--- CMD.auth 111:")
 
-	local type, name, args, response = read_msg (fd)
+	local proto_name, paramTab = my_read_msg (fd)
     syslog.debugf ("--- CMD.auth 222:")
-	assert (type == "REQUEST")
+    local name = proto_name
+    local args = paramTab
+    assert (name == "handshake")
+    -- dump(args, "--- args")
 
 	if name == "handshake" then
 		assert (args and args.name and args.client_pub, "invalid handshake request")
@@ -86,16 +119,19 @@ function CMD.auth (fd, addr)
 
 		local session_key, _, pkey = srp.create_server_session_key (account.verifier, args.client_pub)
 		local challenge = srp.random ()
-		local msg = response {
+		local msg = {
 					user_exists = (account.id ~= nil),
 					salt = account.salt,
 					server_pub = pkey,
 					challenge = challenge,
 				}
-		send_msg (fd, msg)
+		my_send_msg (fd, "handshake_svr", msg)
 
-		type, name, args, response = read_msg (fd)
-		assert (type == "REQUEST" and name == "auth" and args and args.challenge, "invalid auth request")
+
+        proto_name, paramTab = my_read_msg (fd)
+        name = proto_name
+        args = paramTab
+		assert (name == "auth" and args and args.challenge, "invalid auth request")
 
 		local text = aes.decrypt (args.challenge, session_key)
 		assert (challenge == text, "auth challenge failed")
@@ -111,17 +147,17 @@ function CMD.auth (fd, addr)
 		challenge = srp.random ()
 		local session = skynet.call (master, "lua", "save_session", id, session_key, challenge)
 
-		msg = response {
+		msg = {
 				session = session,
 				expire = session_expire_time_in_second,
 				challenge = challenge,
 			}
-		send_msg (fd, msg)
-		
-		type, name, args, response = read_msg (fd)
-		assert (type == "REQUEST")
+        my_send_msg (fd, "auth_svr", msg)
 	end
 
+    proto_name, paramTab = my_read_msg (fd)
+    name = proto_name
+    args = paramTab
 	assert (name == "challenge")
 	assert (args and args.session and args.challenge)
 
@@ -130,14 +166,15 @@ function CMD.auth (fd, addr)
     local challenge = retTab["challenge"]
 	assert (token and challenge)
 
-	local msg = response {
+	local msg = {
 			token = token,
 			challenge = challenge,
             ip = "192.168.253.130", -- 暂时写死，for test
             port = 9555,
 	}
-	send_msg (fd, msg)
+    my_send_msg (fd, "challenge_svr", msg)
 
+    print("------------------------ login ok ------------------------")
 	close (fd)
 end
 
