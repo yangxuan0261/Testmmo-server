@@ -44,16 +44,6 @@ end
 local function read (fd, size)
 	return socket.read (fd, size) or error ()
 end
-
-local function read_msg (fd)
-    syslog.debugf ("--- read_msg 111")
-	local s = read (fd, 2)
-    syslog.debugf ("--- read_msg 222")
-	local size = s:byte(1) * 256 + s:byte(2)
-    syslog.debugf ("--- read_msg, size:%d", size)
-	local msg = read (fd, size)
-	return host:dispatch (msg, size)
-end
  
 local Utils = require "proto_2.utils"
 local msg_define = require "proto_2.msg_define"
@@ -71,12 +61,6 @@ local function my_read_msg(fd)
     print("--- proto_name:", proto_name)
     print("--- params:", params)
     return proto_name, paramTab
-end
-
-local function send_msg (fd, msg)
-	local package = string.pack (">s2", msg)
-    syslog.debugf ("--- send_msg to client:%d, msg len:%d", fd, #package)
-	socket.write (fd, package)
 end
 
 

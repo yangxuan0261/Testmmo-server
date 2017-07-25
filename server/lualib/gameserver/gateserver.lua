@@ -50,7 +50,7 @@ function gateserver.start (handler)
 		local port = assert (tonumber (conf.port))
 		maxclient = conf.maxclient or 64
 
-		syslog.noticef ("listen on %s:%d", addr, port)
+		syslog.noticef ("--- gateserver, listen on %s:%d", addr, port)
 		socket = socketdriver.listen (addr, port)
 		socketdriver.start (socket)
 
@@ -136,6 +136,7 @@ function gateserver.start (handler)
 			return netpack.filter (queue, msg, sz) 
 		end,
 		dispatch = function (_, _, q, type, ...)
+            -- print("--- gateserver, dispatch, type:", type)
 			queue = q
 			if type then
 				return MSG[type] (...) 
@@ -143,6 +144,7 @@ function gateserver.start (handler)
 		end,
 	}
 
+    -- print("---- gateserver", debug.traceback("", 1))
 	skynet.start (function ()
 		skynet.dispatch ("lua", function (_, address, cmd, ...)
 			local f = CMD[cmd]

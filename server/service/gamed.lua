@@ -24,9 +24,9 @@ function gamed.open (config)
 
     local webserver = skynet.uniqueservice ("webserver")
     skynet.call (webserver, "lua", "open")
-	local gdd = skynet.uniqueservice ("gdd")
+    local gdd = skynet.uniqueservice ("gdd")
     skynet.call (gdd, "lua", "open")
-	local world = skynet.uniqueservice ("world")
+    local world = skynet.uniqueservice ("world")
     skynet.call (world, "lua", "open")
     local chatserver = skynet.uniqueservice ("chatserver")
     skynet.call (chatserver, "lua", "open")
@@ -55,6 +55,7 @@ function gamed.command_handler (cmd, ...)
 end
 
 function gamed.auth_handler (session, token)
+    -- print("---------- gamed, ", debug.traceback("", 1))
 	return skynet.call (logind, "lua", "verify", session, token)	
 end
 

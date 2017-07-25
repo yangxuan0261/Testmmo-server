@@ -15,10 +15,15 @@ local id_tbl = {
     {name = "auth"},
     {name = "challenge"},
     {name = "login"},
-        
+
     {name = "handshake_svr"},
     {name = "auth_svr"},
     {name = "challenge_svr"},
+
+    {name = "character_list"},
+    {name = "user_info_svr"},
+
+    {name = "rank_info"},
 }
 
 local name_tbl = {}

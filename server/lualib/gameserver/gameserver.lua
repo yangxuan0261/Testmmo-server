@@ -3,7 +3,11 @@ local skynet = require "skynet"
 local gateserver = require "gameserver.gateserver"
 local syslog = require "syslog"
 local protoloader = require "protoloader"
+local netpack = require "skynet.netpack"
 
+local Utils = require "proto_2.utils"
+local msg_define = require "proto_2.msg_define"
+local Packer = require "proto_2.packer"
 
 local gameserver = {}
 local pending_msg = {}
@@ -19,24 +23,32 @@ end
 function gameserver.start (gamed)
 	local handler = {}
 
-	local host, send_request = protoloader.load (protoloader.LOGIN)
-
 	function handler.open (source, conf)
 		return gamed.open (conf)
 	end
 
 	function handler.connect (fd, addr)
-		syslog.noticef ("connect from %s (fd = %d)", addr, fd)
+		syslog.noticef ("--- gameserver, connect from %s (fd = %d)", addr, fd)
 		gateserver.open_client (fd)
 	end
 
 	function handler.disconnect (fd)
-		syslog.noticef ("fd (%d) disconnected", fd)
+		syslog.noticef ("--- gameserver, fd (%d) disconnected", fd)
 	end
 
+    local function my_read_msg(fd, msg, sz)
+        local msg = netpack.tostring(msg, sz)
+        local proto_id, params = string.unpack(">Hs2", msg)
+        local proto_name = msg_define.id_2_name(proto_id)
+        local paramTab = Utils.str_2_table(params)
+        print("--- proto_name:", proto_name)
+        print("--- params:", params)
+        return proto_name, paramTab
+    end
+
 	local function do_login (fd, msg, sz)
-		local type, name, args, response = host:dispatch (msg, sz)
-		assert (type == "REQUEST")
+		local name, args = my_read_msg(fd, msg, sz)
+		-- assert (type == "REQUEST")
 		assert (name == "login")
 		assert (args.session and args.token)
 		local session = tonumber (args.session) or error ()
