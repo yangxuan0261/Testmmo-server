@@ -5,7 +5,7 @@ local syslog = require "syslog"
 local dbpacker = require "db.packer"
 local handler = require "agent.handler"
 local uuid = require "uuid"
--- local dump = require "print_r"
+-- local dump = require "dump"
 
 local REQUEST = {}
 handler = handler.new (REQUEST)

@@ -7,7 +7,7 @@ local protoloader = require "protoloader"
 local srp = require "srp"
 local aes = require "aes"
 local uuid = require "uuid"
-local dump = require "print_r"
+local dump = require "dump"
 
 local traceback = debug.traceback
 

@@ -5,7 +5,7 @@ local sharedata = require "skynet.sharedata"
 local syslog = require "syslog"
 local handler = require "agent.handler"
 local dbpacker = require "db.packer"
--- local dump = require "print_r"
+-- local dump = require "dump"
 
 
 local REQUEST = {}

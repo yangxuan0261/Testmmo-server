@@ -2,7 +2,7 @@ require "functions"
 local skynet = require "skynet"
 local syslog = require "syslog"
 local uuid = require "uuid"
--- local dump = require "print_r"
+-- local dump = require "dump"
 local dbpacker = require "db.packer"
 
 local FlagOffline = 0

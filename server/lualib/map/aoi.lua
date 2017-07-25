@@ -1,6 +1,6 @@
 local quadtree = require "map.quadtree"
 local syslog = require "syslog"
-local dump = require "print_r"
+local dump = require "dump"
 
 local aoi = {}
 
