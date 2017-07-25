@@ -1,7 +1,7 @@
 local skynet = require "skynet"
 local syslog = require "syslog"
 local dbpacker = require "db.packer"
-local dump = require "dump"
+local dump = require "common.dump"
 
 local FlagOffline = 0
 local FlagOnline = 1

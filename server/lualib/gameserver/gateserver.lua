@@ -1,7 +1,5 @@
 local skynet = require "skynet"
--- local netpack = require "netpack"
 local netpack = require "skynet.netpack"
--- local socketdriver = require "socketdriver"
 local socketdriver = require "skynet.socketdriver"
 
 local syslog = require "syslog"
@@ -15,10 +13,7 @@ local maxclient
 local nclient = 0
 local CMD = setmetatable ({}, { __gc = function () netpack.clear (queue) end })
 
-skynet.register_protocol {
-	name = "client",
-	id = skynet.PTYPE_CLIENT,
-}
+
 
 local connection = {}
 
@@ -144,6 +139,10 @@ function gateserver.start (handler)
 		end,
 	}
 
+    skynet.register_protocol {
+        name = "client",
+        id = skynet.PTYPE_CLIENT,
+    }
     -- print("---- gateserver", debug.traceback("", 1))
 	skynet.start (function ()
 		skynet.dispatch ("lua", function (_, address, cmd, ...)

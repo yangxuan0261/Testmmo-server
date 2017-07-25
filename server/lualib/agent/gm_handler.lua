@@ -5,7 +5,7 @@ local dbpacker = require "db.packer"
 
 local syslog = require "syslog"
 local handler = require "agent.handler"
--- local dump = require "dump"
+local dump = require "common.dump"
 
 
 local REQUEST = {}

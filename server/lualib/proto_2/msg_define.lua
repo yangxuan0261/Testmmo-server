@@ -1,4 +1,4 @@
-local M = {}
+local MsgDefine = {}
 
 local id_tbl = {
     -- 登陆协议
@@ -32,11 +32,11 @@ for id,v in ipairs(id_tbl) do
     name_tbl[v.name] = id
 end
 
-function M.name_2_id(name)
+function MsgDefine.name_2_id(name)
     return name_tbl[name]
 end
 
-function M.id_2_name(id)
+function MsgDefine.id_2_name(id)
     local v = id_tbl[id]
     if not v then
         return
@@ -45,13 +45,13 @@ function M.id_2_name(id)
     return v.name
 end
 
-function M.get_by_id(id)
+function MsgDefine.get_by_id(id)
     return id_tbl[id]
 end
 
-function M.get_by_name(name)
+function MsgDefine.get_by_name(name)
     local id = name_tbl[name]
     return id_tbl[id]
 end
 
-return M
+return MsgDefine

@@ -5,7 +5,7 @@ local syslog = require "syslog"
 local dbpacker = require "db.packer"
 local handler = require "agent.handler"
 local uuid = require "uuid"
--- local dump = require "dump"
+local dump = require "common.dump"
 
 local REQUEST = {}
 handler = handler.new (REQUEST)
@@ -54,6 +54,11 @@ function REQUEST.character_list ()
 		end
 	end
 	return { character = character }
+end
+
+REQUEST.rank_info = function ( dataTab )
+    print("-------------------- rank_info ok!")
+    dump(dataTab, "--- rank_info")
 end
 
 local function create (name, race, class)

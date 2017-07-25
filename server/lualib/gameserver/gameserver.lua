@@ -2,12 +2,14 @@ local skynet = require "skynet"
 
 local gateserver = require "gameserver.gateserver"
 local syslog = require "syslog"
-local protoloader = require "protoloader"
 local netpack = require "skynet.netpack"
 
-local Utils = require "proto_2.utils"
+local Utils = require "common.utils"
 local msg_define = require "proto_2.msg_define"
-local Packer = require "proto_2.packer"
+local Packer = require "proto_2.proto_packer"
+
+-- require "proto_2.proto_process"
+
 
 local gameserver = {}
 local pending_msg = {}

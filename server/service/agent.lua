@@ -7,6 +7,7 @@ local socket = require "skynet.socket"
 
 local syslog = require "syslog"
 local protoloader = require "protoloader"
+
 local character_handler = require "agent.character_handler"
 local map_handler = require "agent.map_handler"
 local aoi_handler = require "agent.aoi_handler"
@@ -16,65 +17,28 @@ local gm_handler = require "agent.gm_handler"
 local world_handler = require "agent.world_handler"
 local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
+
 local dbpacker = require "db.packer"
 local FlagDef = require "config.FlagDef"
-local dump = require "dump"
-
+local dump = require "common.dump"
+local ProtoProcess = require "proto_2.proto_process"
 
 local gamed = tonumber (...)
 local database
-
-local host, proto_request = protoloader.load (protoloader.GAME)
-
-local DefaultName = "Tim"
-
---[[
-.user {
-	fd : integer
-	account : integer
-
-	character : character
-	world : integer
-	map : integer
-}
-]]
-
 local user
-
-local function send_msg (fd, msg)
-	local package = string.pack (">s2", msg)
-	socket.write (fd, package)
-end
-
 local user_fd
 local session = {}
 local session_id = 0
-local send_request_adapter = nil
+
+local DefaultName = "Tim"
+
+
 local function send_request (name, args)
-    send_request_adapter(name, args)
-    if true then
-        return
-    end
-
-    syslog.debugf ("--- 【S>>C】, send_request: %s", name)
-	session_id = session_id + 1
-	local str = proto_request (name, args, session_id)
-	send_msg (user_fd, str)
-	session[session_id] = { name = name, args = args } -- 保存会话数据，客户端返回时重这里取出来对比
+    ProtoProcess.Write (user_fd, name, args)
 end
 
-local Utils = require "proto_2.utils"
+local Utils = require "common.utils"
 local msg_define = require "proto_2.msg_define"
-
-local function my_send_request (name, msgTab)
-    syslog.debugf ("--- 【S>>C】, send_request: %s", name)
-    local msg_str = Utils.table_2_str(msgTab)
-    local id = msg_define.name_2_id(name)
-    local len = 2 + 2 + #msg_str
-    local data = string.pack(">HHs2", len, id, msg_str)
-    socket.write (user_fd, data)
-end
-send_request_adapter = my_send_request
 
 local function kick_self ()
     if true then
@@ -103,25 +67,25 @@ end
 
 local traceback = debug.traceback
 local REQUEST = {} -- 在各个handler中各种定义处理，模块化，但必须确保函数不重名，所以一般 模块名_函数名
-local function handle_request (name, args, response)
-	local f = REQUEST[name]
-	if f then
-        syslog.debugf ("--- 【C>>S】, request from client: %s", name)
-		local ok, ret = xpcall (f, traceback, args)
-		if not ok then
-			syslog.warningf ("handle message(%s) failed : %s", name, ret) 
-			kick_self ()
-		else
-			last_heartbeat_time = skynet.now () -- 每次收到客户端端请求，重新计时心跳时间
-			if response and ret then -- 如果该请求要求返回，则返回结果
-				send_msg (user_fd, response (ret))
-			end
-		end
-	else
-		syslog.warningf ("----- unhandled message : %s", name)
-		kick_self ()
-	end
-end
+-- local function handle_request (name, args, response)
+-- 	local f = REQUEST[name]
+-- 	if f then
+--         syslog.debugf ("--- 【C>>S】, request from client: %s", name)
+-- 		local ok, ret = xpcall (f, traceback, args)
+-- 		if not ok then
+-- 			syslog.warningf ("handle message(%s) failed : %s", name, ret) 
+-- 			kick_self ()
+-- 		else
+-- 			last_heartbeat_time = skynet.now () -- 每次收到客户端端请求，重新计时心跳时间
+-- 			if response and ret then -- 如果该请求要求返回，则返回结果
+-- 				send_msg (user_fd, response (ret))
+-- 			end
+-- 		end
+-- 	else
+-- 		syslog.warningf ("----- unhandled message : %s", name)
+-- 		kick_self ()
+-- 	end
+-- end
 
 local RESPONSE
 local function handle_response (id, args)
@@ -147,20 +111,8 @@ local function handle_response (id, args)
 	end
 end
 
-REQUEST.rank_info = function ( dataTab )
-    print("-------------------- rank_info ok!")
-    dump(dataTab, "--- rank_info")
-end
-
-local netpack = require "skynet.netpack"
 local function my_unpack(msg, sz)
-    local msg = netpack.tostring(msg, sz)
-    local proto_id, params = string.unpack(">Hs2", msg)
-    local proto_name = msg_define.id_2_name(proto_id)
-    local paramTab = Utils.str_2_table(params)
-    print("--- agent, proto_name:", proto_name)
-    print("--- agent, params:", params)
-    return proto_name, paramTab
+    return ProtoProcess.ReadMsg(msg, sz)
 end
 
 local function my_dispatch(source, session, proto_name, ...)
@@ -173,21 +125,6 @@ end
 skynet.register_protocol { -- 注册与客户端交互的协议
 	name = "client",
 	id = skynet.PTYPE_CLIENT,
-	-- unpack = function (msg, sz)
- --        print("------ 终于来带这里解析了, msg:", type(msg))
-	-- 	return host:dispatch (msg, sz) -- 客户端使用的sproto，所以这里用sproto解码
-	-- end,
-	-- dispatch = function (source, session, type, ...)
- --        print("------ 终于来带这里解析了 222, type:", type(type))
-	-- 	if type == "REQUEST" then
-	-- 		handle_request (...) -- 处理客户端的请求
-	-- 	elseif type == "RESPONSE" then
-	-- 		handle_response (...) -- 处理请求客户端后的响应（客户端返回）
-	-- 	else
-	-- 		syslog.warningf ("invalid message type : %s", type) 
-	-- 		kick_self ()
-	-- 	end
-	-- end,
     unpack = my_unpack,
     dispatch = my_dispatch,
 }

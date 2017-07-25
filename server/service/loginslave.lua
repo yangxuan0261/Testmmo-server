@@ -7,7 +7,8 @@ local protoloader = require "protoloader"
 local srp = require "srp"
 local aes = require "aes"
 local uuid = require "uuid"
-local dump = require "dump"
+local dump = require "common.dump"
+local ProtoProcess = require "proto_2.proto_process"
 
 local traceback = debug.traceback
 
@@ -41,39 +42,6 @@ local function close (fd)
 	end
 end
 
-local function read (fd, size)
-	return socket.read (fd, size) or error ()
-end
- 
-local Utils = require "proto_2.utils"
-local msg_define = require "proto_2.msg_define"
-local Packer = require "proto_2.packer"
-
-local function my_read_msg(fd)
-    print("--- my_read_msg begin:")
-    local s = read (fd, 2)
-    local size = s:byte(1) * 256 + s:byte(2)
-    print("--- size:", size)
-    local msg = read (fd, size)
-    local proto_id, params = string.unpack(">Hs2", msg)
-    local proto_name = msg_define.id_2_name(proto_id)
-    local paramTab = Utils.str_2_table(params)
-    print("--- proto_name:", proto_name)
-    print("--- params:", params)
-    return proto_name, paramTab
-end
-
-
-local function my_send_msg (fd, proto_name, msgTab)
-    print("------ my_send_msg:", proto_name)
-    local msg_str = Utils.table_2_str(msgTab)
-    local id = msg_define.name_2_id(proto_name)
-    local len = 2 + 2 + #msg_str
-    local data = string.pack(">HHs2", len, id, msg_str)
-    socket.write (fd, data)
-end
-
-
 function CMD.auth (fd, addr)
 	connection[fd] = addr
 	skynet.timeout (auth_timeout, function ()
@@ -87,7 +55,7 @@ function CMD.auth (fd, addr)
 	socket.limit (fd, 8192)
     syslog.debugf ("--- CMD.auth 111:")
 
-	local proto_name, paramTab = my_read_msg (fd)
+	local proto_name, paramTab = ProtoProcess.Read(fd)
     syslog.debugf ("--- CMD.auth 222:")
     local name = proto_name
     local args = paramTab
@@ -109,10 +77,10 @@ function CMD.auth (fd, addr)
 					server_pub = pkey,
 					challenge = challenge,
 				}
-		my_send_msg (fd, "handshake_svr", msg)
+		ProtoProcess.Write (fd, "handshake_svr", msg)
 
 
-        proto_name, paramTab = my_read_msg (fd)
+        proto_name, paramTab = ProtoProcess.Read(fd)
         name = proto_name
         args = paramTab
 		assert (name == "auth" and args and args.challenge, "invalid auth request")
@@ -136,10 +104,10 @@ function CMD.auth (fd, addr)
 				expire = session_expire_time_in_second,
 				challenge = challenge,
 			}
-        my_send_msg (fd, "auth_svr", msg)
+        ProtoProcess.Write (fd, "auth_svr", msg)
 	end
 
-    proto_name, paramTab = my_read_msg (fd)
+    proto_name, paramTab = ProtoProcess.Read(fd)
     name = proto_name
     args = paramTab
 	assert (name == "challenge")
@@ -156,7 +124,7 @@ function CMD.auth (fd, addr)
             ip = "192.168.253.130", -- 暂时写死，for test
             port = 9555,
 	}
-    my_send_msg (fd, "challenge_svr", msg)
+    ProtoProcess.Write (fd, "challenge_svr", msg)
 
     print("------------------------ login ok ------------------------")
 	close (fd)
