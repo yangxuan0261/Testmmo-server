@@ -6,7 +6,6 @@ local httpd = require "http.httpd"
 local dbpacker = require "db.packer"
 local sockethelper = require "http.sockethelper"
 local urllib = require "http.url"
-require "functions"
 local table = table
 local string = string
 

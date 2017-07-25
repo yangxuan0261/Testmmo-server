@@ -1,4 +1,3 @@
-require "functions"
 local skynet = require "skynet"
 local syslog = require "syslog"
 

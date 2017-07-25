@@ -1,7 +1,7 @@
-require "functions"
 local skynet = require "skynet"
 local syslog = require "syslog"
 local dbpacker = require "db.packer"
+local dump = require "dump"
 
 local FlagNone = 0
 local FlagAccept = 1

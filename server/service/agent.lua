@@ -1,4 +1,3 @@
-require "functions"
 local skynet = require "skynet"
 local queue = require "skynet.queue"
 -- local sharemap = require "sharemap"
@@ -19,6 +18,7 @@ local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
 local dbpacker = require "db.packer"
 local FlagDef = require "config.FlagDef"
+local dump = require "dump"
 
 
 local gamed = tonumber (...)
