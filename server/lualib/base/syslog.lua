@@ -4,11 +4,10 @@ local config = require "config.system"
 
 local syslog = {
 	prefix = {
-		"D|",
-		"I|",
-		"N|",
-		"W|",
-		"E|",
+		"I| ",
+		"N| ",
+		"W| ",
+		"E| ",
 	},
 }
 
@@ -31,10 +30,14 @@ end
 
 function syslog.debug (...)
 	write (1, ...)
+    local logService = skynet.uniqueservice ("logger_server")
+    skynet.call (logService, "lua", "debug", SERVICE_NAME, ...)
 end
 
 function syslog.debugf (...)
 	writef (1, ...)
+    local logService = skynet.uniqueservice ("logger_server")
+    skynet.call (logService, "lua", "debug", SERVICE_NAME, ...)  
 end
 
 function syslog.info (...)
@@ -69,7 +72,9 @@ function syslog.errf (...)
 	writef (5, ...)
 end
 
-
+function syslog.assert (...)
+    assert(...)
+end
 
 syslog.level (tonumber (config.log_level) or 3)
 

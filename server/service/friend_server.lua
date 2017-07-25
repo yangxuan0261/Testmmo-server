@@ -52,7 +52,7 @@ local function loadAddInfo(_srcAcc, _dstAcc)
 end
 
 local CMD = {}
-function CMD.online(source, _acc)
+function CMD.cmd_online(source, _acc)
     local tmp = {}
     local friends = skynet.call(database, "lua", "friend", "loadFreindList", _acc)
     dump(friends, "--- friends")
@@ -73,7 +73,7 @@ function CMD.online(source, _acc)
     friendTab[_acc] = friInfo
 end
 
-function CMD.offline(source, _acc)
+function CMD.cmd_offline(source, _acc)
     local friInfo = friendTab[_acc]
     assert(friInfo, string.format("Error, not found account:%d", _acc))
     friInfo["agent"] = nil
@@ -85,7 +85,7 @@ function CMD.offline(source, _acc)
     end
 end
 
-function CMD.addApply(source, _srcAcc, _dstAcc)
+function CMD.cmd_add_apply(source, _srcAcc, _dstAcc)
     local friInfo = friendTab[_srcAcc]
     assert(friInfo, string.format("Error, not found account:%d", _srcAcc))
 

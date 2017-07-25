@@ -3,11 +3,10 @@
 local handler = {}
 local mt = { __index = handler }
 
-function handler.new (request, response, cmd)
+function handler.new (rpc, cmd)
 	return setmetatable ({
 		init_func = {},
-		request = request,
-		response = response,
+		rpc = rpc,
 		cmd = cmd,
 	}, mt)
 end
@@ -28,8 +27,7 @@ function handler:register (user)
 		f (user)
 	end
 
-	merge (user.REQUEST, self.request)
-	merge (user.RESPONSE, self.response)
+	merge (user.RPC, self.rpc)
 	merge (user.CMD, self.cmd)
 end
 
@@ -41,8 +39,7 @@ local function clean (dest, t)
 end
 
 function handler:unregister (user)
-	clean (user.REQUEST, self.request)
-	clean (user.RESPONSE, self.response)
+	clean (user.RPC, self.rpc)
 	clean (user.CMD, self.cmd)
 end
 

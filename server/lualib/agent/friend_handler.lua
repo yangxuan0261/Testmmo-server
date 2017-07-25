@@ -6,9 +6,9 @@ local syslog = require "syslog"
 local handler = require "agent.handler"
 local dbpacker = require "db.packer"
 
-local REQUEST = {}
+local RPC = {}
 local CMD = {}
-handler = handler.new (REQUEST, nil, CMD)
+handler = handler.new (RPC, nil, CMD)
 
 local user
 local database
@@ -20,23 +20,23 @@ handler:init (function (u)
 	friendserver = skynet.uniqueservice ("friend_server")
 end)
 
-function REQUEST.friend_addApply (args)
+function RPC.rpc_server_friend_add_apply (args)
     assert(args.account)
-    skynet.call(friendserver, "lua", "addApply", user.account, args.account)
+    skynet.call(friendserver, "lua", "cmd_add_apply", user.account, args.account)
 end
 
-function REQUEST.friend_addConfirm (args)
+function RPC.rpc_server_friend_add_confirm (args)
     assert(args.account and args.flag)
     skynet.call(friendserver, "lua", "addConfirm", user.account, args.account, args.flag)
 end
 
-function REQUEST.friend_list (args)
+function RPC.rpc_server_friend_list (args)
     local friends = skynet.call(friendserver, "lua", "getFrends", user.account)
     dump(friends, "--- friend_list")
     return friends
 end
 
-function CMD.friend_sendChat( _account, _msg )
+function CMD.cmd_friend_send_msg( _account, _msg )
     -- user.send_request ("labor_send", { msg = _msg }) -- protocol
     local info = skynet.call (database, "lua", "account", "loadInfo", _account)
     if info then
@@ -45,7 +45,7 @@ function CMD.friend_sendChat( _account, _msg )
     user.send_request ("tips", { content = string.format("【%s】 say:%s", info.nickName, _msg) })
 end
 
-function CMD.friend_onlineNty( _account )
+function CMD.cmd_friend_online_notify( _account )
     local info = skynet.call (database, "lua", "account", "loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)
@@ -53,7 +53,7 @@ function CMD.friend_onlineNty( _account )
     user.send_request ("tips", { content = string.format("【%s】 online", info.nickName) })
 end
 
-function CMD.friend_add( _account, _flag )
+function CMD.cmd_friend_add( _account, _flag )
     local info = skynet.call (database, "lua", "account", "loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)

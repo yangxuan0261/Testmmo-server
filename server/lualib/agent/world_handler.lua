@@ -6,9 +6,9 @@ local syslog = require "syslog"
 local handler = require "agent.handler"
 local dbpacker = require "db.packer"
 
-local REQUEST = {}
+local RPC = {}
 local CMD = {}
-handler = handler.new (REQUEST, nil, CMD)
+handler = handler.new (RPC, CMD)
 
 local user
 local database
@@ -20,14 +20,14 @@ handler:init (function (u)
 	chatserver = skynet.uniqueservice ("chat_server")
 end)
 
-function REQUEST.world_chat (args)
+function RPC.world_chat (args)
     assert(args.msg)
     skynet.call(chatserver, "lua", "broad", user.account, args.msg)
 end
 
 local FlagOffline = 0
 local FlagOnline = 1
-function REQUEST.world_accountList ()
+function RPC.world_accountList ()
     local allList = skynet.call(database, "lua", "account", "loadlist")
     local onlineList = skynet.call(chatserver, "lua", "getOnline")
     if allList and #allList > 0 then

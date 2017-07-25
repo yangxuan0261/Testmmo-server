@@ -87,7 +87,7 @@ function CMD.leave(source, _account, _laborId)
     return labor.name
 end
 
-function CMD.online(source, _account, _laborId)
+function CMD.cmd_online(source, _account, _laborId)
     if not _laborId then
         return
     end
@@ -98,7 +98,7 @@ function CMD.online(source, _account, _laborId)
     labor["members"][_account]["agent"] = source
 end
 
-function CMD.offline(source, _account, _laborId)
+function CMD.cmd_offline(source, _account, _laborId)
     if not _laborId then
         return
     end

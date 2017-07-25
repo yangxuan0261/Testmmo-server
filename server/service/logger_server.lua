@@ -1,6 +1,8 @@
 local skynet = require "skynet"
 local syslog = require "syslog"
 
+-- 日志处理服务，可以io到本地文件或者数据库中
+
 local _logId = 0
 
 local CMD = {}
@@ -8,8 +10,9 @@ function CMD.open()
     
 end
 
-function CMD.debug(...)
-    print("--- Logger.debug:", ...)
+function CMD.debug( serviceName, ...)
+    _logId = _logId + 1
+    -- print("--- Logger.debug:", _logId, serviceName, ...)
 end
 
 function CMD.warn()

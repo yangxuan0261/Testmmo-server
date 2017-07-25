@@ -17,7 +17,7 @@ function CMD.open (source, conf)
     database = skynet.uniqueservice ("database")
 end
 
-function CMD.online(source, _acc)
+function CMD.cmd_online(source, _acc)
     local accInfo = {
         account = _acc,
         agent = source,
@@ -26,7 +26,7 @@ function CMD.online(source, _acc)
     onlineTab[_acc] = accInfo
 end
 
-function CMD.offline(source, _acc)
+function CMD.cmd_offline(source, _acc)
     local accInfo = onlineTab[_acc]
     assert(accInfo, string.format("Error, not found account:%d", _acc))
 

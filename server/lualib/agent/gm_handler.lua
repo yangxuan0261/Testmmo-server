@@ -8,8 +8,8 @@ local handler = require "agent.handler"
 local dump = require "common.dump"
 
 
-local REQUEST = {}
-handler = handler.new (REQUEST)
+local RPC = {}
+handler = handler.new (RPC)
 
 local user
 local database
@@ -78,7 +78,7 @@ local function gmExecute(gmStr)
     syslog.debugf ("--- gm func:%s", funcName)
     -- dump(argTab, "gmParser")
 
-    local f = user.REQUEST[funcName] -- search request func
+    local f = user.RPC[funcName] -- search request func
     assert(f, "Error: not found func:"..funcName)
 
     argTab, retFunc = gmPackArgs(funcName, argTab)
@@ -95,7 +95,7 @@ local function gmExecute(gmStr)
         -- user.send_request (, { content = funcName.." success!!" })
 end
 
-function REQUEST.gm (args)
+function RPC.gm (args)
     local gmStr = args.data
     assert(gmStr and #gmStr > 0, "Error: empty gm")
     return gmExecute(gmStr)

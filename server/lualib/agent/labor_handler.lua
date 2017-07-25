@@ -8,9 +8,9 @@ local dbpacker = require "db.packer"
 local dump = require "common.dump"
 
 
-local REQUEST = {}
+local RPC = {}
 local CMD = {}
-handler = handler.new (REQUEST, nil, CMD)
+handler = handler.new (RPC, nil, CMD)
 
 local user
 local database
@@ -22,7 +22,7 @@ handler:init (function (u)
     laborserver = skynet.uniqueservice ("labor_server")
 end)
 
-function REQUEST.labor_create (args)
+function RPC.rpc_server_labor_create (args)
     assert(args.name, "Error: REQUEST.labor_create")
     local laborData = skynet.call (laborserver, "lua", "create", user.account, args.name)
     if laborData then
@@ -31,13 +31,13 @@ function REQUEST.labor_create (args)
     end
 end
 
-function REQUEST.labor_list (args)
+function RPC.rpc_server_labor_list (args)
     local laborTab = skynet.call (laborserver, "lua", "list")
     -- dump(laborTab, "labor_list")
     return laborTab
 end
 
-function REQUEST.labor_members (args)
+function RPC.rpc_server_labor_members (args)
     assert(args.id)
     local laborTab = skynet.call (laborserver, "lua", "get_members", args.id)
     for k,v in pairs(laborTab) do
@@ -45,7 +45,7 @@ function REQUEST.labor_members (args)
     end
 end
 
-function REQUEST.labor_join (args)
+function RPC.rpc_server_labor_join (args)
     assert(args.id, "Error: REQUEST.labor_join")
     if user.info.laborId then
         user.send_request ("tips", { content = "please leave current labor" })
@@ -61,7 +61,7 @@ function REQUEST.labor_join (args)
     end
 end
 
-function REQUEST.labor_leave (args)
+function RPC.rpc_server_labor_leave (args)
     assert(user.info.laborId, "Error: REQUEST.labor_leave")
     local laborId = user.info.laborId
     user.info.laborId = nil
@@ -73,7 +73,7 @@ function REQUEST.labor_leave (args)
     end
 end
 
-function REQUEST.labor_chat (args)
+function RPC.rpc_server_labor_chat (args)
     assert(args.msg)
     local laborId = user.info.laborId
     assert(laborId, "Error: dont join a labor")
@@ -83,7 +83,7 @@ function REQUEST.labor_chat (args)
     end)
 end
 
-function CMD.labor_sendChat( _account, _msg )
+function CMD.cmd_labor_send_chat( _account, _msg )
     -- user.send_request ("labor_send", { msg = _msg }) -- protocol
     local info = skynet.call (database, "lua", "account", "loadInfo", _account)
     if info then

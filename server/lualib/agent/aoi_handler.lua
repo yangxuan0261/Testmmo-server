@@ -7,9 +7,9 @@ local handler = require "agent.handler"
 local dump = require "common.dump"
 
 
-local RESPONSE = {}
+local RPC = {}
 local CMD = {}
-handler = handler.new (nil, RESPONSE, CMD)
+handler = handler.new (RPC, CMD)
 
 local subscribe_character
 local subscribe_agent
@@ -229,7 +229,7 @@ function CMD.aoi_send (agent, scope) -- 接收到 广播源agent 发送的 属�
 	refresh_aoi (id, scope)
 end
 
-function RESPONSE.aoi_add (request, response) -- 如果客户端想要更多的信息(response.wantmore == true)，则下行这个角色(request.character.id)的数据
+function RPC.aoi_add (request, response) -- 如果客户端想要更多的信息(response.wantmore == true)，则下行这个角色(request.character.id)的数据
 	if not response or not response.wantmore then return end
     syslog.debugf ("--- RESPONSE.aoi_add, aaa")
 	local id = request.character.id
@@ -239,13 +239,13 @@ function RESPONSE.aoi_add (request, response) -- 如果客户端想要更多的�
 	end
 end
 
-function RESPONSE.aoi_update_move (request, response)
+function RPC.aoi_update_move (request, response)
     syslog.debugf ("@@@ response from client, RESPONSE.aoi_update_move")
 	if not response or not response.wantmore then return end
 	aoi_update_response (request.character.id, "move")
 end
 
-function RESPONSE.aoi_update_attribute (request, response)
+function RPC.aoi_update_attribute (request, response)
     syslog.debugf ("~~~ RESPONSE.aoi_update_attribute")
 	if not response or not response.wantmore then return end
 	aoi_update_response (request.character.id, "attribute")

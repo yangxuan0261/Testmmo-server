@@ -5,15 +5,15 @@ local handler = require "agent.handler"
 local aoi_handler = require "agent.aoi_handler"
 
 
-local REQUEST = {}
+local RPC = {}
 local user
-handler = handler.new (REQUEST)
+handler = handler.new (RPC)
 
 handler:init (function (u)
 	user = u
 end)
 
-function REQUEST.move (args)
+function RPC.move (args)
 	assert (args and args.pos)
 
 	local npos = args.pos -- new pos

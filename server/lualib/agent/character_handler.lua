@@ -7,8 +7,8 @@ local handler = require "agent.handler"
 local uuid = require "uuid"
 local dump = require "common.dump"
 
-local REQUEST = {}
-handler = handler.new (REQUEST)
+local RPC = {}
+handler = handler.new (RPC)
 
 local user
 local database
@@ -39,7 +39,7 @@ local function check_character (account, id)
 	return false
 end
 
-function REQUEST.character_list ()
+function RPC.character_list ()
     syslog.debugf("--- REQUEST.character_list, account:"..user.account)
 	local list = load_list (user.account)
 	local character = {}
@@ -56,7 +56,7 @@ function REQUEST.character_list ()
 	return { character = character }
 end
 
-REQUEST.rank_info = function ( dataTab )
+RPC.rank_info = function ( dataTab )
     print("-------------------- rank_info ok!")
     dump(dataTab, "--- rank_info")
 end
@@ -87,7 +87,7 @@ local function create (name, race, class)
 	return character
 end
 
-function REQUEST.character_create (args)
+function RPC.character_create (args)
     dump(args, "character_create")
 	local c = args.character or error ("invalid argument")
 
@@ -112,7 +112,7 @@ function REQUEST.character_create (args)
 	return { character = character }
 end
 
-function REQUEST.character_pick (args)
+function RPC.character_pick (args)
     syslog.notice (string.format ("--- character_handler, character_pick, id:%d", args.id))
 
 	local id = args.id or error ()
@@ -129,7 +129,7 @@ function REQUEST.character_pick (args)
 	return { character = character }
 end
 
-function REQUEST.character_delete (args)
+function RPC.character_delete (args)
     syslog.notice (string.format ("--- character_handler, character_delete, id:%d", args.id))
     local id = args.id or error ()
     local list = load_list(user.account)
