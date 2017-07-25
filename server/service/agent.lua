@@ -1,13 +1,13 @@
 local skynet = require "skynet"
 local queue = require "skynet.queue"
--- local sharemap = require "sharemap"
 local sharemap = require "skynet.sharemap"
--- local socket = require "socket"
 local socket = require "skynet.socket"
+local dbpacker = require "db.packer"
+local FlagDef = require "config.FlagDef"
+local dump = require "common.dump"
+local ProtoProcess = require "proto_2.proto_process"
 
-local syslog = require "syslog"
-local protoloader = require "protoloader"
-
+----------- all handler begin ------------
 local character_handler = require "agent.character_handler"
 local map_handler = require "agent.map_handler"
 local aoi_handler = require "agent.aoi_handler"
@@ -17,11 +17,7 @@ local gm_handler = require "agent.gm_handler"
 local world_handler = require "agent.world_handler"
 local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
-
-local dbpacker = require "db.packer"
-local FlagDef = require "config.FlagDef"
-local dump = require "common.dump"
-local ProtoProcess = require "proto_2.proto_process"
+----------- all handler end ------------
 
 local gamed = tonumber (...)
 local database
@@ -29,6 +25,9 @@ local user
 local user_fd
 local session = {}
 local session_id = 0
+
+local Logger = require "common.logger"
+local assert = Logger.assert
 
 local DefaultName = "Tim"
 
@@ -42,7 +41,7 @@ local msg_define = require "proto_2.msg_define"
 
 local function kick_self ()
     if true then
-        syslog.debugf ("--- kick_self, traceback:", debug.traceback())
+        Logger.debugf ("--- kick_self, traceback:", debug.traceback())
         return
     end
 
@@ -56,9 +55,9 @@ local function heartbeat_check ()
 
 	local t = last_heartbeat_time + HEARTBEAT_TIME_MAX - skynet.now ()
 	if t <= 0 then
-        syslog.debugf ("--- heatbeat:%s, last:%s, now:%s", HEARTBEAT_TIME_MAX, last_heartbeat_time, skynet.now() )
+        Logger.debugf ("--- heatbeat:%s, last:%s, now:%s", HEARTBEAT_TIME_MAX, last_heartbeat_time, skynet.now() )
 
-		syslog.warning ("--- heatbeat check failed, exe kick_self()")
+		Logger.warning ("--- heatbeat check failed, exe kick_self()")
 		kick_self ()
 	else
 		skynet.timeout (t, heartbeat_check)
@@ -73,7 +72,7 @@ local REQUEST = {} -- 在各个handler中各种定义处理，模块化，但必
 --         syslog.debugf ("--- 【C>>S】, request from client: %s", name)
 -- 		local ok, ret = xpcall (f, traceback, args)
 -- 		if not ok then
--- 			syslog.warningf ("handle message(%s) failed : %s", name, ret) 
+-- 			syslog.warnf ("handle message(%s) failed : %s", name, ret) 
 -- 			kick_self ()
 -- 		else
 -- 			last_heartbeat_time = skynet.now () -- 每次收到客户端端请求，重新计时心跳时间
@@ -82,7 +81,7 @@ local REQUEST = {} -- 在各个handler中各种定义处理，模块化，但必
 -- 			end
 -- 		end
 -- 	else
--- 		syslog.warningf ("----- unhandled message : %s", name)
+-- 		syslog.warnf ("----- unhandled message : %s", name)
 -- 		kick_self ()
 -- 	end
 -- end
@@ -91,22 +90,22 @@ local RESPONSE
 local function handle_response (id, args)
 	local s = session[id] -- 检查是否存在此次会话
 	if not s then
-		syslog.warningf ("Error, session %d not found", id)
+		Logger.warnf ("Error, session %d not found", id)
 		kick_self ()
 		return
 	end
 
 	local f = RESPONSE[s.name] -- 检查是否存在user.send_request("aaa", xxx)中对应的响应方法 RESPONSE.aaa
 	if not f then
-		syslog.warningf ("unhandled response : %s", s.name)
+		Logger.warnf ("unhandled response : %s", s.name)
 		kick_self () -- 不存在则踢下线，因为可能会话被篡改
 		return
 	end
 
-    syslog.debugf ("--- 【C>>S】, response from client: %s", s.name)
+    Logger.debugf ("--- 【C>>S】, response from client: %s", s.name)
 	local ok, ret = xpcall (f, traceback, s.args, args) 
 	if not ok then
-		syslog.warningf ("handle response(%d-%s) failed : %s", id, s.name, ret) 
+		Logger.warnf ("handle response(%d-%s) failed : %s", id, s.name, ret) 
 		kick_self ()
 	end
 end
@@ -132,7 +131,7 @@ skynet.register_protocol { -- 注册与客户端交互的协议
 local CMD = {}
 
 function CMD.open (fd, account)
-	syslog.debug ("-------- agent opened:"..account)
+	Logger.debugf ("-------- agent opened:"..account)
     database = skynet.uniqueservice ("database")
 
     local info = skynet.call (database, "lua", "account", "loadInfo", account)
@@ -175,9 +174,9 @@ function CMD.open (fd, account)
 
     -- get in
     -- skynet.fork(function()
-        local chatserver = skynet.uniqueservice ("chatserver")
-        local friendserver = skynet.uniqueservice ("friendserver")
-        local laborserver = skynet.uniqueservice ("laborserver")
+        local chatserver = skynet.uniqueservice ("chat_server")
+        local friendserver = skynet.uniqueservice ("friend_server")
+        local laborserver = skynet.uniqueservice ("labor_server")
         skynet.call (chatserver, "lua", "online", user.account)
         skynet.call (friendserver, "lua", "online", user.account)
         skynet.call (laborserver, "lua", "online", user.account)
@@ -190,8 +189,7 @@ function CMD.open (fd, account)
 end
 
 function CMD.close ()
-	-- syslog.debugf ("--- agent closed, traceback:"..debug.traceback())
-    syslog.debugf ("--- agent closed, traceback:")
+    Logger.debugf ("--- agent closed, traceback:")
 
 	local account
 	if user then
@@ -216,9 +214,9 @@ function CMD.close ()
 
             -- get out, can fork, user will nil
         -- skynet.fork(function()
-            local chatserver = skynet.uniqueservice ("chatserver")
-            local friendserver = skynet.uniqueservice ("friendserver")
-            local laborserver = skynet.uniqueservice ("laborserver")
+            local chatserver = skynet.uniqueservice ("chat_server")
+            local friendserver = skynet.uniqueservice ("friend_server")
+            local laborserver = skynet.uniqueservice ("labor_server")
             skynet.call (chatserver, "lua", "offline", user.account)
             skynet.call (friendserver, "lua", "offline", user.account)
             skynet.call (laborserver, "lua", "offline", user.account)
@@ -243,25 +241,25 @@ end
 
 function CMD.kick ()
 	error ()
-	syslog.debug ("agent kicked")
+	Logger.debugf ("agent kicked")
 	skynet.call (gamed, "lua", "kick", skynet.self (), user_fd)
 end
 
 function CMD.world_enter (world)
 	local name = string.format ("agent:%d:%s", user.character.id, user.character.general.name)
-    syslog.notice (string.format ("--- agent, world_enter, name:%s", name))
+    Logger.noticef (string.format ("--- agent, world_enter, name:%s", name))
 
 
 	character_handler.init (user.character)
 
 	user.world = world
-    syslog.notice (string.format ("--- agent, world_enter, character_handler:unregister"))
+    Logger.noticef (string.format ("--- agent, world_enter, character_handler:unregister"))
 
 	return user.character.general.map, user.character.movement.pos
 end
 
 function CMD.map_enter (map)
-    syslog.notice (string.format ("--- agent, map_enter"))
+    Logger.noticef (string.format ("--- agent, map_enter"))
 
 	user.map = map
 
@@ -272,16 +270,18 @@ function CMD.map_enter (map)
 end
 
 skynet.start (function ()
+    Logger.debugf("我了个去")
+
 	skynet.dispatch ("lua", function (_, _, command, ...)
 		local f = CMD[command]
 		if not f then
-			syslog.warningf ("unhandled message(%s)", command) 
+			Logger.warn("unhandled message(%s)", command) 
 			return skynet.ret ()
 		end
 
 		local ok, ret = xpcall (f, traceback, ...)
 		if not ok then
-			syslog.warningf ("handle message(%s) failed : %s", command, ret) 
+			Logger.warn ("handle message(%s) failed : %s", command, ret) 
 			kick_self ()
 			return skynet.ret ()
 		end

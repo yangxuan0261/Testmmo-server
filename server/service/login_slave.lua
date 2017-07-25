@@ -3,7 +3,6 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 
 local syslog = require "syslog"
-local protoloader = require "protoloader"
 local srp = require "srp"
 local aes = require "aes"
 local uuid = require "uuid"
@@ -15,7 +14,6 @@ local traceback = debug.traceback
 
 local master
 local database
-local host
 local auth_timeout
 local session_expire_time
 local session_expire_time_in_second
@@ -29,7 +27,6 @@ local CMD = {}
 function CMD.init (m, id, conf)
 	master = m
 	database = skynet.uniqueservice ("database")
-	host = protoloader.load (protoloader.LOGIN)
 	auth_timeout = conf.auth_timeout * 100
 	session_expire_time = conf.session_expire_time * 100
 	session_expire_time_in_second = conf.session_expire_time

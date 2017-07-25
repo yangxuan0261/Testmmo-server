@@ -17,7 +17,7 @@ local chatserver
 handler:init (function (u)
 	user = u
     database = skynet.uniqueservice ("database")
-	chatserver = skynet.uniqueservice ("chatserver")
+	chatserver = skynet.uniqueservice ("chat_server")
 end)
 
 function REQUEST.world_chat (args)

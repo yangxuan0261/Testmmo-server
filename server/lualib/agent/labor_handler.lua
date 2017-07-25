@@ -19,7 +19,7 @@ local laborserver
 handler:init (function (u)
 	user = u
 	database = skynet.uniqueservice ("database")
-    laborserver = skynet.uniqueservice ("laborserver")
+    laborserver = skynet.uniqueservice ("labor_server")
 end)
 
 function REQUEST.labor_create (args)

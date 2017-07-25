@@ -6,6 +6,9 @@ local IntervalTime = 5 * 100
 local serTab = {}
 
 local CMD = {}
+function CMD.open()
+end
+
 function CMD.register(source, _serName)
     serTab[source] = _serName
 end

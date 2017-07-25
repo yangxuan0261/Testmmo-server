@@ -22,17 +22,17 @@ function gamed.open (config)
 		table.insert (pool, skynet.newservice ("agent", self))
 	end
 
-    local webserver = skynet.uniqueservice ("webserver")
+    local webserver = skynet.uniqueservice ("web_server")
     skynet.call (webserver, "lua", "open")
     local gdd = skynet.uniqueservice ("gdd")
     skynet.call (gdd, "lua", "open")
     local world = skynet.uniqueservice ("world")
     skynet.call (world, "lua", "open")
-    local chatserver = skynet.uniqueservice ("chatserver")
+    local chatserver = skynet.uniqueservice ("chat_server")
     skynet.call (chatserver, "lua", "open")
-    local laborserver = skynet.uniqueservice ("laborserver")
+    local laborserver = skynet.uniqueservice ("labor_server")
     skynet.call (laborserver, "lua", "open")
-    local friendserver = skynet.uniqueservice ("friendserver")
+    local friendserver = skynet.uniqueservice ("friend_server")
     skynet.call (friendserver, "lua", "open")
 end
 

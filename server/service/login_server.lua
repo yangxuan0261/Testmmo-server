@@ -18,7 +18,7 @@ function CMD.open (conf)
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 
 	for i = 1, conf.slave do
-		local s = skynet.newservice ("loginslave")
+		local s = skynet.newservice ("login_slave")
         skynet.call (s, "lua", "init", skynet.self (), i, conf)
 		skynet.call (s, "lua", "open")
 		table.insert (slave, s)

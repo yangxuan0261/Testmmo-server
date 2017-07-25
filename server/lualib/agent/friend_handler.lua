@@ -17,7 +17,7 @@ local friendserver
 handler:init (function (u)
 	user = u
     database = skynet.uniqueservice ("database")
-	friendserver = skynet.uniqueservice ("friendserver")
+	friendserver = skynet.uniqueservice ("friend_server")
 end)
 
 function REQUEST.friend_addApply (args)
