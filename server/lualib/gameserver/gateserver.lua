@@ -78,7 +78,7 @@ function gateserver.start (handler)
 			local agent = c.agent
 			if agent then
 				syslog.noticef ("fd(%d) disconnected, closing agent(%d)", fd, agent)
-				skynet.call (agent, "lua", "close")
+				skynet.call (agent, "lua", "cmd_agent_close")
 				c.agent = nil
 			else
 				if handler.disconnect then

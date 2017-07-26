@@ -11,7 +11,7 @@ local online_character = {}
 local function kick_character (character)
 	local a = online_character[character]
 	if a then
-		skynet.call (a, "lua", "cmd_kick")
+		skynet.call (a, "lua", "cmd_agent_kick")
 		online_character[character] = nil
 	end
 end

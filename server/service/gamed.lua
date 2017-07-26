@@ -39,14 +39,19 @@ end
 function gamed.command_handler (cmd, ...)
 	local CMD = {}
 
-	function CMD.close (agent, account)
-		syslog.debugf ("agent %d recycled", agent)
+	function CMD.close (oldAgent, account)
+		syslog.debugf ("agent %d recycled", oldAgent)
+        local currAgent = online_account[account]
+        if oldAgent and oldAgent == currAgent then
+            online_account[account] = nil
+        else
+            syslog.errorf ("上线用户被意外关闭，下次挤号将不会被剔除，oldAgent:%d, newAgent:%d", oldAgent, currAgent)
+        end
 
-		online_account[account] = nil
-		table.insert (pool, agent)
+		table.insert (pool, oldAgent)
 	end
 
-	function CMD.cmd_kick (agent, fd)
+	function CMD.cmd_gamed_kick (agent, fd)
 		gameserver.kick (fd)
 	end
 
@@ -63,7 +68,7 @@ function gamed.login_handler (fd, account)
 	local agent = online_account[account]
 	if agent then
 		syslog.warnf ("multiple login detected for account %d", account)
-		skynet.call (agent, "lua", "cmd_kick", account) -- 用户重登，踢出之前的用户
+		skynet.call (agent, "lua", "cmd_agent_kick", account) -- 用户重登，踢出之前的用户
 	end
 
 	if #pool == 0 then

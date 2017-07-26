@@ -26,9 +26,8 @@ local gamed = tonumber (...)
 local database
 local user
 local user_fd
-local session = {}
-local session_id = 0
 local DefaultName = "Tim"
+local isOnline = false
 
 local function send_request (name, args)
     assert(user_fd, "--- agent send_request, user_fd is nil")
@@ -39,7 +38,7 @@ local Utils = require "common.utils"
 local msg_define = require "proto.msg_define"
 
 local function kick_self ()
-	skynet.call (gamed, "lua", "cmd_kick", skynet.self (), user_fd)
+	skynet.call (gamed, "lua", "cmd_gamed_kick", skynet.self (), user_fd)
 end
 
 local last_heartbeat_time
@@ -132,6 +131,7 @@ end
 
 local CMD = {}
 function CMD.cmd_agent_open (fd, account)
+    isOnline = true
 	syslog.debugf ("-------- agent opened:"..account)
     database = skynet.uniqueservice ("database")
 
@@ -188,8 +188,12 @@ function CMD.cmd_agent_open (fd, account)
     send_request("rpc_client_user_info", user.info) -- todo: 这里会导致程序崩溃
 end
 
-function CMD.close ()
-    syslog.debugf ("--- agent closed, traceback:")
+local function save_data()
+
+end
+
+function CMD.cmd_agent_close ()
+    syslog.debugf ("--- cmd_agent_close:")
 
 	local account
 	if user then
@@ -233,14 +237,19 @@ function CMD.close ()
 		user = nil
 		user_fd = nil
 		RPC = nil
+        isOnline = false
 	end
 
     -- 通知服务器关掉这个agent的socket
 	skynet.call (gamed, "lua", "close", skynet.self (), account)
 end
 
-function CMD.cmd_kick ()
-	syslog.debugf ("agent cmd_kick")
+
+
+-- 被相同账号挤掉踢下线时，需要保数据
+function CMD.cmd_agent_kick ()
+	syslog.debugf ("--- cmd_agent_kick")
+    save_data()
     kick_self()
 end
 
