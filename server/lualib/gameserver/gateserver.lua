@@ -16,7 +16,6 @@ local CMD = setmetatable ({}, { __gc = function () netpack.clear (queue) end })
 local connection = {}
 
 function gateserver.open_client (fd)
-    
 	if connection[fd] then
 		socketdriver.start (fd)
 	end
@@ -26,6 +25,8 @@ function gateserver.close_client (fd)
 	local c = connection[fd]
 	if c then
         print("---------- gateserver.close_client")
+
+
 		socketdriver.close (fd)
 	end
 end
@@ -91,7 +92,7 @@ function gateserver.start (handler)
 	end
 
 	function MSG.close (fd)
-		close_fd (fd)
+		close_fd (fd) -- 不在这里关闭，因为有点延迟，agent 重登需要先 close 再 open。类似构造和析构的顺序
 	end
 
 	function MSG.error (fd, msg)

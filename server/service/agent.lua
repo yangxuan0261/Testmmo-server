@@ -31,6 +31,7 @@ local session_id = 0
 local DefaultName = "Tim"
 
 local function send_request (name, args)
+    assert(user_fd, "--- agent send_request, user_fd is nil")
     ProtoProcess.Write (user_fd, name, args)
 end
 
@@ -179,12 +180,12 @@ function CMD.cmd_agent_open (fd, account)
         local friendserver = skynet.uniqueservice ("friend_server")
         local laborserver = skynet.uniqueservice ("labor_server")
         skynet.call (chatserver, "lua", "cmd_online", user.account)
-        skynet.call (friendserver, "lua", "cmd_online", user.account)
-        skynet.call (laborserver, "lua", "cmd_online", user.account)
+        -- skynet.call (friendserver, "lua", "cmd_online", user.account)
+        -- skynet.call (laborserver, "lua", "cmd_online", user.account)
     -- end)
 
     -- send info to client
-    send_request("rpc_client_user_info", user.info)
+    send_request("rpc_client_user_info", user.info) -- todo: 这里会导致程序崩溃
 end
 
 function CMD.close ()
@@ -217,8 +218,8 @@ function CMD.close ()
             local friendserver = skynet.uniqueservice ("friend_server")
             local laborserver = skynet.uniqueservice ("labor_server")
             skynet.call (chatserver, "lua", "cmd_offline", user.account)
-            skynet.call (friendserver, "lua", "cmd_offline", user.account)
-            skynet.call (laborserver, "lua", "cmd_offline", user.account)
+            -- skynet.call (friendserver, "lua", "cmd_offline", user.account)
+            -- skynet.call (laborserver, "lua", "cmd_offline", user.account)
         -- end)
 
 		character_handler:save_info (user.character) -- 保存角色数据

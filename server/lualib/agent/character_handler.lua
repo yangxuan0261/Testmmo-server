@@ -57,8 +57,14 @@ function RPC.rpc_server_character_list ()
 end
 
 function RPC.rpc_server_rank_info ( dataTab )
-    print("-------------------- rpc_server_rank_info ok!")
+    -- print("-------------------- rpc_server_rank_info ok!")
     dump(dataTab, "--- rank_info")
+end
+
+function RPC.rpc_server_test_crash(args )
+    -- body
+    dump(args, "---------- rpc_server_test_crash")
+    user.send_request("rpc_client_user_info", user.info) -- todo: 这里会导致程序崩溃
 end
 
 local function create (name, race, class)
