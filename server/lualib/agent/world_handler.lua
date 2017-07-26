@@ -20,14 +20,9 @@ handler:init (function (u)
 	chatserver = skynet.uniqueservice ("chat_server")
 end)
 
-function RPC.world_chat (args)
-    assert(args.msg)
-    skynet.call(chatserver, "lua", "broad", user.account, args.msg)
-end
-
 local FlagOffline = 0
 local FlagOnline = 1
-function RPC.world_accountList ()
+function RPC.rpc_world_account_list ()
     local allList = skynet.call(database, "lua", "account", "loadlist")
     local onlineList = skynet.call(chatserver, "lua", "getOnline")
     if allList and #allList > 0 then
@@ -43,15 +38,6 @@ function RPC.world_accountList ()
         end
     end
     return onlineList
-end
-
-function CMD.world_sendChat( _account, _msg )
-    -- user.send_request ("labor_send", { msg = _msg }) -- protocol
-    local info = skynet.call (database, "lua", "account", "loadInfo", _account)
-    if info then
-        info = dbpacker.unpack(info)
-    end
-    user.send_request ("tips", { content = string.format("【%s】 say:%s", info.nickName, _msg) })
 end
 
 return handler

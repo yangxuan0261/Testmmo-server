@@ -1,9 +1,7 @@
 local skynet = require "skynet"
 local netpack = require "skynet.netpack"
 local socketdriver = require "skynet.socketdriver"
-
 local syslog = require "syslog"
-
 
 local gateserver = {}
 
@@ -18,6 +16,7 @@ local CMD = setmetatable ({}, { __gc = function () netpack.clear (queue) end })
 local connection = {}
 
 function gateserver.open_client (fd)
+    
 	if connection[fd] then
 		socketdriver.start (fd)
 	end
@@ -26,6 +25,7 @@ end
 function gateserver.close_client (fd)
 	local c = connection[fd]
 	if c then
+        print("---------- gateserver.close_client")
 		socketdriver.close (fd)
 	end
 end
@@ -34,7 +34,7 @@ function gateserver.forward (fd, agent)
 	local c = connection[fd]
 	if c then
 		c.agent = agent
-		syslog.debugf ("start forward fd(%d) to agent(%d)", fd, agent)
+		syslog.debugf ("------------ start forward fd(%d) to agent(%d)", fd, agent)
 	end
 end
 
@@ -143,7 +143,7 @@ function gateserver.start (handler)
         name = "client",
         id = skynet.PTYPE_CLIENT,
     }
-    -- print("---- gateserver", debug.traceback("", 1))
+
 	skynet.start (function ()
 		skynet.dispatch ("lua", function (_, address, cmd, ...)
 			local f = CMD[cmd]

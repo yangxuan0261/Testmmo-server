@@ -53,8 +53,8 @@ function CMD.open()
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
-function CMD.heart_beat ()
-    -- print("--- heart_beat database")
+function CMD.cmd_heart_beat ()
+    -- print("--- cmd_heart_beat database")
 end
 
 

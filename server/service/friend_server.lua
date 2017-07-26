@@ -21,15 +21,15 @@ local friendTab = {}
 
 local database
 
-local function isOnline(_acc)
-    local friInfo = friendTab[_acc]
+local function isOnline(account)
+    local friInfo = friendTab[account]
     if friInfo and friInfo["online"] == FlagOffline then
         return true, friInfo["agent"]
     end
 end
 
-local function onlineNotify(_acc, _func, ...)
-    local ok, agent = isOnline(_acc)
+local function onlineNotify(account, _func, ...)
+    local ok, agent = isOnline(account)
     if ok then
         skynet.call(agent, "lua", _func, ...)
     end
@@ -52,36 +52,36 @@ local function loadAddInfo(_srcAcc, _dstAcc)
 end
 
 local CMD = {}
-function CMD.cmd_online(source, _acc)
+function CMD.cmd_online(source, account)
     local tmp = {}
-    local friends = skynet.call(database, "lua", "friend", "loadFreindList", _acc)
+    local friends = skynet.call(database, "lua", "friend", "loadFreindList", account)
     dump(friends, "--- friends")
     if friends then
         for _,v in pairs(friends) do
             v = dbpacker.unpack(v)
             tmp[v.account] = v
-            onlineNotify(v.account, "friend_onlineNty", _acc, FlagOnline)
+            onlineNotify(v.account, "friend_onlineNty", account, FlagOnline)
         end
     end
 
     local friInfo = {
-        account = _acc,
+        account = account,
         agent = source,
         online = FlagOnline,
         friends = tmp,
     }
-    friendTab[_acc] = friInfo
+    friendTab[account] = friInfo
 end
 
-function CMD.cmd_offline(source, _acc)
-    local friInfo = friendTab[_acc]
-    assert(friInfo, string.format("Error, not found account:%d", _acc))
+function CMD.cmd_offline(source, account)
+    local friInfo = friendTab[account]
+    assert(friInfo, string.format("Error, not found account:%d", account))
     friInfo["agent"] = nil
     friInfo["online"] = FlagOffline
 
     local friends = friInfo["friends"]
     for _,v in pairs(friends) do
-        onlineNotify(v.account, "friend_onlineNty", _acc, FlagOffline)
+        onlineNotify(v.account, "friend_onlineNty", account, FlagOffline)
     end
 end
 
@@ -128,9 +128,9 @@ function CMD.del(source, _srcAcc, _dstAcc)
     assert(b1 and b2, "Error, freind del")
 end
 
-function CMD.getFrends(source, _acc)
+function CMD.getFrends(source, account)
     local friInfo = friendTab[_srcAcc]
-    assert(friInfo, string.format("Error, not found account:%d", _acc))
+    assert(friInfo, string.format("Error, not found account:%d", account))
     local ret = {}
     local friends = friInfo["friends"]
     for _,v in pairs(friends) do
@@ -155,8 +155,8 @@ function CMD.open (source, conf)
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
-function CMD.heart_beat ()
-    -- print("--- heart_beat friendserver")
+function CMD.cmd_heart_beat ()
+    -- print("--- cmd_heart_beat friendserver")
 end
 
 local traceback = debug.traceback
@@ -166,13 +166,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warningf ("unhandled message(%s)", command)
+            syslog.warnf ("unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
-            syslog.warningf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("handle message(%s) failed : %s", command, ret)
             return skynet.ret ()
         end
         skynet.retpack (ret)

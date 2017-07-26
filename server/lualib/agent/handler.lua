@@ -1,5 +1,5 @@
 -- agent所有handler的父类
-
+local syslog = require "syslog"
 local handler = {}
 local mt = { __index = handler }
 
@@ -22,13 +22,21 @@ local function merge (dest, t) -- 复制表元素
 	end
 end
 
+local function merge_safe (dest, t) -- 复制表元素，并检查
+    if not dest or not t then return end
+    for k, v in pairs (t) do
+        assert(dest[k] == nil, string.format("handler 有个方法重名:%s", k))
+        dest[k] = v
+    end
+end
+
 function handler:register (user)
 	for _, f in pairs (self.init_func) do
 		f (user)
 	end
 
-	merge (user.RPC, self.rpc)
-	merge (user.CMD, self.cmd)
+	merge_safe (user.RPC, self.rpc)
+	merge_safe (user.CMD, self.cmd)
 end
 
 local function clean (dest, t)

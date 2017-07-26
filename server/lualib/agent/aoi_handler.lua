@@ -134,8 +134,8 @@ local function aoi_add (list)
 		skynet.fork (function ()
             syslog.debugf ("--- aoi_add, self:%d, target:%d", self, target)
 
-            -- 传入自己的reader到target中，返回 target 的 aoi_subscribe 中返回的reader
-			local reader = skynet.call (target, "lua", "aoi_subscribe", self, create_reader ())
+            -- 传入自己的reader到target中，返回 target 的 cmd_aoi_subscribe 中返回的reader
+			local reader = skynet.call (target, "lua", "cmd_aoi_subscribe", self, create_reader ())
 			subscribe (target, reader) -- 订阅 添加进视野的角色
 
             -- 其实就是为了获取到对方的reader，读出对方的角色数据，下行给自己的客户端
@@ -174,20 +174,20 @@ local function aoi_remove (list)
 
 				user.send_request ("aoi_remove", { character = id }) --下行移除视野外的角色
 
-				skynet.call (agent, "lua", "aoi_unsubscribe", self) -- 通知订阅者 取消 订阅自己
+				skynet.call (agent, "lua", "cmd_aoi_unsubscribe", self) -- 通知订阅者 取消 订阅自己
 			end
 		end)
 	end
 end
 
-function CMD.aoi_subscribe (agent, reader)
-	syslog.debugf ("aoi_subscribe agent(%d) reader(%s)", agent, reader)
+function CMD.cmd_aoi_subscribe (agent, reader)
+	syslog.debugf ("cmd_aoi_subscribe agent(%d) reader(%s)", agent, reader)
 	subscribe (agent, reader)
 	return create_reader ()
 end
 
-function CMD.aoi_unsubscribe (agent)
-	syslog.debugf ("aoi_unsubscribe agent(%d)", agent)
+function CMD.cmd_aoi_unsubscribe (agent)
+	syslog.debugf ("cmd_aoi_unsubscribe agent(%d)", agent)
 	local t = subscribe_agent[agent]
 	if t then
 		local id = t.character.id
@@ -197,22 +197,22 @@ function CMD.aoi_unsubscribe (agent)
 	end
 end
 
-function CMD.aoi_manage (alist, rlist, ulist, scope)
+function CMD.cmd_aoi_manage (alist, rlist, ulist, scope)
 	if (alist or ulist) and character_writer then -- 只有添加和更新时才需要将character的数据同步出去，坐等别人update取出来用
 		character_writer:commit () --
 	end
 
     -- syslog.debugf ("--- self agent:%d", skynet.self()) 
     if alist then
-        dump(alist, "--- aoi_manage, alist")
+        dump(alist, "--- cmd_aoi_manage, alist")
     end
 
     if rlist then
-        dump(rlist, "--- aoi_manage, rlist")
+        dump(rlist, "--- cmd_aoi_manage, rlist")
     end
 
     if ulist then
-        dump(ulist, "--- aoi_manage, ulist")
+        dump(ulist, "--- cmd_aoi_manage, ulist")
     end
 
 	aoi_add (alist)

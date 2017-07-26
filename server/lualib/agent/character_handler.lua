@@ -39,7 +39,7 @@ local function check_character (account, id)
 	return false
 end
 
-function RPC.character_list ()
+function RPC.rpc_server_character_list ()
     syslog.debugf("--- REQUEST.character_list, account:"..user.account)
 	local list = load_list (user.account)
 	local character = {}
@@ -56,8 +56,8 @@ function RPC.character_list ()
 	return { character = character }
 end
 
-RPC.rank_info = function ( dataTab )
-    print("-------------------- rank_info ok!")
+function RPC.rpc_server_rank_info ( dataTab )
+    print("-------------------- rpc_server_rank_info ok!")
     dump(dataTab, "--- rank_info")
 end
 
@@ -87,7 +87,7 @@ local function create (name, race, class)
 	return character
 end
 
-function RPC.character_create (args)
+function RPC.rpc_server_character_create (args)
     dump(args, "character_create")
 	local c = args.character or error ("invalid argument")
 
@@ -112,7 +112,7 @@ function RPC.character_create (args)
 	return { character = character }
 end
 
-function RPC.character_pick (args)
+function RPC.rpc_server_character_pick (args)
     syslog.notice (string.format ("--- character_handler, character_pick, id:%d", args.id))
 
 	local id = args.id or error ()
@@ -123,13 +123,13 @@ function RPC.character_pick (args)
 	user.character = character
 
 	local world = skynet.uniqueservice ("world")
-	skynet.call (world, "lua", "character_enter", id)
+	skynet.call (world, "lua", "cmd_world_character_enter", id)
     syslog.notice (string.format ("--- REQUEST.character_pick, id:%d", id))
 
 	return { character = character }
 end
 
-function RPC.character_delete (args)
+function RPC.rpc_server_character_delete (args)
     syslog.notice (string.format ("--- character_handler, character_delete, id:%d", args.id))
     local id = args.id or error ()
     local list = load_list(user.account)
@@ -158,7 +158,7 @@ attribute_string = {
 	"stamina",
 }
 
-function handler.init (character)
+function handler:init_info (character)
 	local temp_attribute = {
 		[1] = {},
 		[2] = {},
@@ -202,7 +202,7 @@ function handler.init (character)
 	end
 end
 
-function handler.save (character)
+function handler:save_info (character)
 	if not character then return end
 
 	local runtime = character.runtime

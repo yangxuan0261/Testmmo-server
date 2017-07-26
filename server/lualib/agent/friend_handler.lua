@@ -38,7 +38,7 @@ end
 
 function CMD.cmd_friend_send_msg( _account, _msg )
     -- user.send_request ("labor_send", { msg = _msg }) -- protocol
-    local info = skynet.call (database, "lua", "account", "loadInfo", _account)
+    local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)
     end
@@ -46,7 +46,7 @@ function CMD.cmd_friend_send_msg( _account, _msg )
 end
 
 function CMD.cmd_friend_online_notify( _account )
-    local info = skynet.call (database, "lua", "account", "loadInfo", _account)
+    local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)
     end
@@ -54,7 +54,7 @@ function CMD.cmd_friend_online_notify( _account )
 end
 
 function CMD.cmd_friend_add( _account, _flag )
-    local info = skynet.call (database, "lua", "account", "loadInfo", _account)
+    local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)
     end

@@ -52,7 +52,7 @@ function RPC.rpc_server_labor_join (args)
     else
         user.info.laborId = args.id
         local json = dbpacker.pack(user.info)
-        skynet.call (database, "lua", "account", "saveInfo", user.account, json)
+        skynet.call (database, "lua", "account", "cmd_account_saveInfo", user.account, json)
 
         local laborName = skynet.call (laborserver, "lua", "join", user.account, args.id)
         if laborName then
@@ -66,7 +66,7 @@ function RPC.rpc_server_labor_leave (args)
     local laborId = user.info.laborId
     user.info.laborId = nil
     local json = dbpacker.pack(user.info)
-    skynet.call (database, "lua", "account", "saveInfo", user.account, json)
+    skynet.call (database, "lua", "account", "cmd_account_saveInfo", user.account, json)
     local laborName = skynet.call (laborserver, "lua", "leave", user.account, laborId)
     if laborName then
         user.send_request ("tips", { content = string.format("leave 【%s】 success!!", laborName) })
@@ -85,7 +85,7 @@ end
 
 function CMD.cmd_labor_send_chat( _account, _msg )
     -- user.send_request ("labor_send", { msg = _msg }) -- protocol
-    local info = skynet.call (database, "lua", "account", "loadInfo", _account)
+    local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", _account)
     if info then
         info = dbpacker.unpack(info)
     end
@@ -96,7 +96,6 @@ function CMD.cmd_labor_send_chat( _account, _msg )
     }
 
     user.send_request ("user_chat", { flag = user.FlagDef.Chat_Labor, data = dbpacker.pack(msg) })
-
     -- user.send_request ("tips", { content = string.format("【%s】 say:%s", info.nickName, _msg) })
 end
 

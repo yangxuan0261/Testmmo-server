@@ -4,6 +4,7 @@ local config = require "config.system"
 
 local syslog = {
 	prefix = {
+        "D| ",
 		"I| ",
 		"N| ",
 		"W| ",
@@ -56,19 +57,19 @@ function syslog.noticef (...)
 	writef (3, ...)
 end
 
-function syslog.warning (...)
+function syslog.warn (...)
 	write (4, ...)
 end
 
-function syslog.warningf (...)
+function syslog.warnf (...)
 	writef (4, ...)
 end
 
-function syslog.err (...)
+function syslog.error (...)
 	write (5, ...)
 end
 
-function syslog.errf (...)
+function syslog.errorf (...)
 	writef (5, ...)
 end
 

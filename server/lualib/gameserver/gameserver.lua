@@ -5,10 +5,8 @@ local syslog = require "syslog"
 local netpack = require "skynet.netpack"
 
 local Utils = require "common.utils"
-local msg_define = require "proto_2.msg_define"
-local Packer = require "proto_2.proto_packer"
-
--- require "proto_2.proto_process"
+local msg_define = require "proto.msg_define"
+local Packer = require "proto.proto_packer"
 
 
 local gameserver = {}
@@ -38,6 +36,7 @@ function gameserver.start (gamed)
 		syslog.noticef ("--- gameserver, fd (%d) disconnected", fd)
 	end
 
+    -- 由于本服务已经注册 socket 协议，所以不能封装到 proto_process.lua 中，该文件有包含 socket.lua，会导致重复注册 socket 协议错误
     local function my_read_msg(fd, msg, sz)
         local msg = netpack.tostring(msg, sz)
         local proto_id, params = string.unpack(">Hs2", msg)
@@ -50,8 +49,7 @@ function gameserver.start (gamed)
 
 	local function do_login (fd, msg, sz)
 		local name, args = my_read_msg(fd, msg, sz)
-		-- assert (type == "REQUEST")
-		assert (name == "login")
+		assert (name == "rpc_server_login_gameserver")
 		assert (args.session and args.token)
 		local session = tonumber (args.session) or error ()
 		local account = gamed.auth_handler (session, args.token) or error ()
@@ -77,7 +75,7 @@ function gameserver.start (gamed)
 					skynet.rawcall(agent, "client", t.msg, t.sz)
 				end
 			else
-				syslog.warningf ("%s login failed : %s", addr, account)
+				syslog.warnf ("%s login failed : %s", addr, account)
 				gateserver.close_client (fd)
 			end
 

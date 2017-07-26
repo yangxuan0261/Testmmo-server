@@ -16,20 +16,20 @@ function CMD.init (w, c)
 	aoi.init (conf.bbox, conf.radius)
 end
 
-function CMD.character_enter (_, agent, character)
-	syslog.noticef ("--- CMD.character_enter, character(%d) loading map", character)
+function CMD.cmd_map_character_enter (_, agent, character)
+	syslog.noticef ("--- CMD.cmd_map_character_enter, character(%d) loading map", character)
 
 	pending_character[agent] = character
-	skynet.call (agent, "lua", "map_enter", skynet.self ())
+	skynet.call (agent, "lua", "cmd_map_enter", skynet.self ())
 end
 
-function CMD.character_leave (agent)
+function CMD.cmd_map_character_leave (agent)
 	local character = online_character[agent] or pending_character[agent]
 	if character ~= nil then
 		syslog.noticef ("character(%d) leave map", character)
 		local ok, list = aoi.remove (agent) -- 返回我的视野列表
 		if ok then
-			skynet.call (agent, "lua", "aoi_manage", nil, list)
+			skynet.call (agent, "lua", "cmd_aoi_manage", nil, list)
 		end
 	end
 	online_character[agent] = nil
@@ -49,14 +49,14 @@ function CMD.character_ready (agent, pos)
         return false 
     end
 
-	skynet.call (agent, "lua", "aoi_manage", list)
+	skynet.call (agent, "lua", "cmd_aoi_manage", list)
 	return true
 end
 
 function CMD.move_blink (agent, pos)
 	local ok, add, update, remove = aoi.update (agent, pos)
 	if not ok then return end
-	skynet.call (agent, "lua", "aoi_manage", add, remove, update, "move")
+	skynet.call (agent, "lua", "cmd_aoi_manage", add, remove, update, "move")
 	return true
 end
 
@@ -65,8 +65,8 @@ function CMD.open (conf)
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end
 
-function CMD.heart_beat ()
-    -- print("--- heart_beat map")
+function CMD.cmd_heart_beat ()
+    -- print("--- cmd_heart_beat map")
 end
 
 local traceback = debug.traceback
@@ -74,13 +74,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warningf ("unhandled message(%s)", command)
+            syslog.warnf ("unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
-            syslog.warningf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("handle message(%s) failed : %s", command, ret)
             -- kick_self ()
             return skynet.ret ()
         end

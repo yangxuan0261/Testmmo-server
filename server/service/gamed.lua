@@ -22,14 +22,14 @@ function gamed.open (config)
 		table.insert (pool, skynet.newservice ("agent", self))
 	end
 
-    local webserver = skynet.uniqueservice ("web_server")
-    skynet.call (webserver, "lua", "open")
+    -- local webserver = skynet.uniqueservice ("web_server")
+    -- skynet.call (webserver, "lua", "open")
     local gdd = skynet.uniqueservice ("gdd")
     skynet.call (gdd, "lua", "open")
-    local world = skynet.uniqueservice ("world")
-    skynet.call (world, "lua", "open")
+    -- local world = skynet.uniqueservice ("world")
+    -- skynet.call (world, "lua", "open")
     local chatserver = skynet.uniqueservice ("chat_server")
-    skynet.call (chatserver, "lua", "open")
+    skynet.call (chatserver, "lua", "cmd_open")
     local laborserver = skynet.uniqueservice ("labor_server")
     skynet.call (laborserver, "lua", "open")
     local friendserver = skynet.uniqueservice ("friend_server")
@@ -46,7 +46,7 @@ function gamed.command_handler (cmd, ...)
 		table.insert (pool, agent)
 	end
 
-	function CMD.kick (agent, fd)
+	function CMD.cmd_kick (agent, fd)
 		gameserver.kick (fd)
 	end
 
@@ -62,8 +62,8 @@ end
 function gamed.login_handler (fd, account)
 	local agent = online_account[account]
 	if agent then
-		syslog.warningf ("multiple login detected for account %d", account)
-		skynet.call (agent, "lua", "kick", account)
+		syslog.warnf ("multiple login detected for account %d", account)
+		skynet.call (agent, "lua", "cmd_kick", account) -- 用户重登，踢出之前的用户
 	end
 
 	if #pool == 0 then
@@ -75,7 +75,7 @@ function gamed.login_handler (fd, account)
 	end
 	online_account[account] = agent
 
-	skynet.call (agent, "lua", "open", fd, account)
+	skynet.call (agent, "lua", "cmd_agent_open", fd, account)
 	gameserver.forward (fd, agent)
 	return agent
 end

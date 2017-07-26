@@ -1,11 +1,13 @@
 local constant = require "constant"
 local srp = require "srp"
 
+local syslog = require "syslog"
+local assert = syslog.assert
 
-local account = {}
+local CMD = {}
 local connection_handler
 
-function account.init (ch)
+function CMD.init (ch)
 	connection_handler = ch
 end
 
@@ -31,11 +33,9 @@ local function make_friend_key (account)
     return connection_handler (account), string.format ("user:%s_%d", "friends", account)
 end
 
-function account.load (name)
+function CMD.cmd_account_load_by_name (name)
 	assert (name)
-
 	local acc = { name = name }
-
 	local connection, key = make_key (name) 
 	if connection:exists (key) then
 		acc.id = connection:hget (key, "account")
@@ -44,11 +44,10 @@ function account.load (name)
 	else
 		acc.salt, acc.verifier = srp.create_verifier (name, constant.default_password)
 	end
-
 	return acc
 end
 
-function account.create (id, name, password)
+function CMD.cmd_account_create (id, name, password)
 	assert (id and name and #name < 24 and password and #password < 24, "invalid argument")
 
 	local connection, key = make_key (name)
@@ -57,30 +56,25 @@ function account.create (id, name, password)
 	local salt, verifier = srp.create_verifier (name, password)
 	assert (connection:hmset (key, "salt", salt, "verifier", verifier) ~= 0, "save account verifier failed")
 
-    -- save to list
-    account.savelist(id)
+    connection, key = make_list_key ()
+    assert (connection:sadd (key, id) ~= 0, "create account failed")
 	return id
 end
 
-function account.savelist (account)
-    connection, key = make_list_key ()
-    connection:sadd (key, account)
-end
-
-function account.loadlist ()
+function CMD.loadlist ()
     connection, key = make_list_key ()
     return connection:smembers (key) or {}
 end
 
-function account.loadInfo( account )
+function CMD.cmd_account_loadInfo( account )
     local connection, key = make_accInfo_key (account)
     return connection:get (key)
 end
 
-function account.saveInfo( account, json )
+function CMD.cmd_account_saveInfo( account, json )
     local connection, key = make_accInfo_key (account)
     assert (connection:set (key, json) ~= 0, "saveInfo failed")
     return true
 end
 
-return account
+return CMD

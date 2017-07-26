@@ -17,7 +17,7 @@ local function make_labor_key (id)
 	return connection_handler (id), string.format ("labor:%d", id)
 end
 
-function labor.saveInfo (id, data)
+function labor.cmd_labor_saveInfo (id, data)
 	local connection, key = make_labor_key (id)
 	assert (connection:hset (key, id, data) ~= 0)
 
@@ -25,7 +25,7 @@ function labor.saveInfo (id, data)
 	return id
 end
 
-function labor.loadInfo (id)
+function labor.cmd_labor_loadInfo (id)
     local connection, key = make_labor_key (id)
     return connection:hget (key, id)
 end

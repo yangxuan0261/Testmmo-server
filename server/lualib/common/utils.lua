@@ -8,8 +8,6 @@ Utils.table_2_str = function (obj)
 end
 
 Utils.str_2_table = function (str)
-    -- local tmp = cjson.decode(str)
-    -- print("------------------ type:", type(tmp))
     return cjson.decode(str)
 end
 ------------ 用 cjson 做序列化 end -----------

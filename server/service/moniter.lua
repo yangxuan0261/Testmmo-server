@@ -15,11 +15,11 @@ end
 
 -- 服务宕机，发邮件通知
 local function serviceDump(_serName)
-    syslog.errf("--- Error: service 【%s】 dump!", _serName)
+    syslog.errorf("--- Error: service 【%s】 dump!", _serName)
 end
 
 local function callService(_addr)
-    skynet.call(_addr, "lua", "heart_beat")
+    skynet.call(_addr, "lua", "cmd_heart_beat")
 end
 
 --[[
@@ -46,13 +46,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warningf ("unhandled message(%s)", command)
+            syslog.warnf ("unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
-            syslog.warningf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("handle message(%s) failed : %s", command, ret)
             return skynet.ret ()
         end
         skynet.retpack (ret)

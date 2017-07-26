@@ -8,41 +8,42 @@ local FlagOnline = 1
 
 local onlineTab = {}
 local table = table
+local assert = syslog.assert
 
 local database
 
 local CMD = {}
-function CMD.open (source, conf)
-    syslog.debugf("--- chat server open")
+function CMD.cmd_open (source, conf)
+    syslog.noticef("--- 聊天服 open")
     database = skynet.uniqueservice ("database")
 end
 
-function CMD.cmd_online(source, _acc)
+function CMD.cmd_online(source, account)
     local accInfo = {
-        account = _acc,
+        account = account,
         agent = source,
         online = FlagOnline,
     }
-    onlineTab[_acc] = accInfo
+    onlineTab[account] = accInfo
 end
 
-function CMD.cmd_offline(source, _acc)
-    local accInfo = onlineTab[_acc]
-    assert(accInfo, string.format("Error, not found account:%d", _acc))
+function CMD.cmd_offline(source, account)
+    local accInfo = onlineTab[account]
+    assert(accInfo, string.format("Error, not found account:%d", account))
 
-    onlineTab[_acc] = nil
+    onlineTab[account] = nil
 end
 
 function CMD.getOnline(source)
     return onlineTab
 end
 
-function CMD.broad(source, _acc, _msg)
+function CMD.cmd_chat_world_broadcast(source, account, msg)
     local function sendMsg( ... )
-        local accInfo = onlineTab[_acc]
-        assert(accInfo, string.format("Error, not found account:%d", _acc))
+        local accInfo = onlineTab[account]
+        assert(accInfo, string.format("Error, not found account:%d", account))
         for _,v in pairs(onlineTab) do
-            skynet.call(v["agent"], "lua", "world_sendChat", _acc, _msg)
+            skynet.call(v["agent"], "lua", "cmd_chat_world", account, msg)
         end
     end
     skynet.fork(sendMsg)
@@ -53,13 +54,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warningf ("unhandled message(%s)", command)
+            syslog.warnf ("unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
-            syslog.warningf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("handle message(%s) failed : %s", command, ret)
             -- kick_self ()
             return skynet.ret ()
         end

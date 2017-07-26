@@ -24,36 +24,36 @@ function CMD.open (source, conf)
     local dataTab = skynet.call (database, "lua", "labor", "loadlist")
 
     for _,v in pairs(dataTab) do
-        v = skynet.call (database, "lua", "labor", "loadInfo", v)
+        v = skynet.call (database, "lua", "labor", "cmd_labor_loadInfo", v)
         v = dbpacker.unpack(v) -- decode json
         laborTab[v.id] = v
     end
     dump(laborTab, "all labor")
 end
 
-function CMD.heart_beat ()
-    -- print("--- heart_beat laborserver")
+function CMD.cmd_heart_beat ()
+    -- print("--- cmd_heart_beat laborserver")
 end
 
-function CMD.create(source, _account, _laborName)
+function CMD.create(source, account, laborName)
     local account = {
-        account = _account,
+        account = account,
         online = FlagOnline,
         agent = source,
         }
 
     local laborInfo = {
             id = uuid.gen(),
-            ctor = _account,
-            name = _laborName,
+            ctor = account,
+            name = laborName,
             members = {}
         }
-    laborInfo["members"][_account] = account -- insert creater
+    laborInfo["members"][account] = account -- insert creater
 
     dump(laborInfo, "labor_create")
 
     local json = dbpacker.pack (laborInfo)
-    local id = skynet.call (database, "lua", "labor", "saveInfo", laborInfo.id, json)
+    local id = skynet.call (database, "lua", "labor", "cmd_labor_saveInfo", laborInfo.id, json)
     syslog.debugf("--- create labor success, id:%d", id)
 
     laborTab[id] = laborInfo
@@ -61,52 +61,52 @@ function CMD.create(source, _account, _laborName)
     return { id = id, name = laborInfo.name }
 end
 
-function CMD.join(source, _account, _laborId)
+function CMD.join(source, account, _laborId)
     local labor = laborTab[_laborId]
     assert(labor, "Error, join labor fail")
 
     local account = {
-        account = _account,
+        account = account,
         online = FlagOnline,
         agent = source,
         }
-    labor["members"][_account] = account
+    labor["members"][account] = account
 
     local json = dbpacker.pack (labor)
-    local id = skynet.call (database, "lua", "labor", "saveInfo", _laborId, json)
+    local id = skynet.call (database, "lua", "labor", "cmd_labor_saveInfo", _laborId, json)
 
     return labor.name
 end
 
-function CMD.leave(source, _account, _laborId)
+function CMD.leave(source, account, _laborId)
     local labor = laborTab[_laborId]
     assert(labor, "Error, leave labor fail")
-    labor["members"][_account] = nil
+    labor["members"][account] = nil
     local json = dbpacker.pack (labor)
-    local id = skynet.call (database, "lua", "labor", "saveInfo", _laborId, json)
+    local id = skynet.call (database, "lua", "labor", "cmd_labor_saveInfo", _laborId, json)
     return labor.name
 end
 
-function CMD.cmd_online(source, _account, _laborId)
+function CMD.cmd_online(source, account, _laborId)
     if not _laborId then
         return
     end
 
     local labor = laborTab[_laborId]
     assert(labor, "Error, labor online fail")
-    labor["members"][_account]["online"] = FlagOnline
-    labor["members"][_account]["agent"] = source
+    labor["members"][account]["online"] = FlagOnline
+    labor["members"][account]["agent"] = source
 end
 
-function CMD.cmd_offline(source, _account, _laborId)
+function CMD.cmd_offline(source, account, _laborId)
     if not _laborId then
         return
     end
 
     local labor = laborTab[_laborId]
     assert(labor, "Error, labor offline fail")
-    labor["members"][_account]["online"] = FlagOffline
-    labor["members"][_account]["agent"] = nil
+    labor["members"][account]["online"] = FlagOffline
+    labor["members"][account]["agent"] = nil
 end
 
 function CMD.list (source, id)
@@ -119,12 +119,12 @@ function CMD.get_members (source, id)
     return labor["members"]
 end
 
-function CMD.broad (source, id, _account, _msg)
+function CMD.broad (source, id, account, _msg)
     local function sendMsg( ... )
         local members = CMD.get_members(nil, id)
         for _,v in pairs(members) do
             if v["online"] == FlagOnline then
-                skynet.call (v["agent"], "lua", "labor_sendChat", _account, _msg)
+                skynet.call (v["agent"], "lua", "labor_sendChat", account, _msg)
             end
         end
     end
@@ -136,13 +136,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warningf ("unhandled message(%s)", command)
+            syslog.warnf ("unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, source, ...)
         if not ok then
-            syslog.warningf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("handle message(%s) failed : %s", command, ret)
             -- kick_self ()
             return skynet.ret ()
         end
