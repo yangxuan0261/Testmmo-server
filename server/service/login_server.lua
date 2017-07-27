@@ -42,7 +42,7 @@ function CMD.open (conf)
 end
 
 function CMD.save_session (account, key, challenge)
-	session = session_id
+	local session = session_id
 	session_id = session_id + 1
 
 	s = slave[(session % nslave) + 1]

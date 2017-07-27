@@ -54,7 +54,7 @@ function gameserver.start (gamed)
 		local session = tonumber (args.session) or error ()
 		local account = gamed.auth_handler (session, args.token) or error ()
 		assert (account)
-		return account
+		return account, session
 	end
 
 	local traceback = debug.traceback
@@ -65,10 +65,10 @@ function gameserver.start (gamed)
 		else
 			pending_msg[fd] = {}
 
-			local ok, account = xpcall (do_login, traceback, fd, msg, sz) -- 去登陆服认证
+			local ok, account, session = xpcall (do_login, traceback, fd, msg, sz) -- 去登陆服认证
 			if ok then
-				syslog.noticef ("account %d login success", account)
-				local agent = gamed.login_handler (fd, account)
+				syslog.noticef ("gameserver do_login auth ok, account:%d, session:%d", account, session)
+				local agent = gamed.login_handler (fd, account, session)
 				queue = pending_msg[fd]
 				for _, t in pairs (queue) do -- 待处理消息逐一处理
 					syslog.noticef ("forward pending message to agent %d", agent)

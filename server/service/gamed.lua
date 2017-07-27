@@ -64,7 +64,7 @@ function gamed.auth_handler (session, token)
 	return skynet.call (logind, "lua", "verify", session, token)	
 end
 
-function gamed.login_handler (fd, account)
+function gamed.login_handler (fd, account, session)
 	local agent = online_account[account]
 	if agent then
 		syslog.warnf ("multiple login detected for account %d", account)

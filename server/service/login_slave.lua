@@ -22,6 +22,8 @@ local slaved = {}
 local CMD = {}
 local RPC = {}
 
+-- todo: 认证失败，需要下行协议通知客户端
+
 local function close (fd)
 	if connection[fd] then
 		socket.close (fd)
