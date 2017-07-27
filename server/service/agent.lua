@@ -243,7 +243,11 @@ function CMD.cmd_agent_close ()
 	skynet.call (gamed, "lua", "cmd_gamed_close", skynet.self (), account, session)
 end
 
-
+-- todo: 下行挤号提示
+function CMD.cmd_agent_other_login ()
+    syslog.warn ("--- cmd_agent_other_login")
+    send_request("rpc_client_other_login")
+end
 
 -- 被相同账号挤掉踢下线时，需要保数据
 function CMD.cmd_agent_kick ()

@@ -20,6 +20,7 @@ local id_tbl = {
 {name = "rpc_client_tips"},
 
 {name = "rpc_server_test_crash"},
+{name = "rpc_client_other_login"},
 }
 
 local name_tbl = {}

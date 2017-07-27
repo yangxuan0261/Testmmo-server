@@ -98,6 +98,7 @@ function gamed.login_handler (fd, account, session)
     -- 两者唯一的区别就是 session 会不同
 	if agent then 
 		syslog.warnf ("multiple login detected for account %d", account)
+        skynet.call (agent, "lua", "cmd_agent_other_login") -- 
 		skynet.call (agent, "lua", "cmd_agent_kick", account) -- 用户重登，踢出之前的用户，然后在之前用户 sock 关闭后，再处理登陆
         info.isKick = true
         info.fd = fd
