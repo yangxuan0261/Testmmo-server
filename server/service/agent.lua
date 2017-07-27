@@ -21,21 +21,18 @@ local labor_handler = require "agent.labor_handler"
 ----------- all handler end ------------
 
 local assert = syslog.assert
-
+local traceback = debug.traceback
 local gamed = tonumber (...)
 local database
 local user
 local user_fd
 local DefaultName = "Tim"
-local isOnline = false
+local RPC = {} -- 在各个handler中各种定义处理，模块化，但必须确保函数不重名，所以一般 模块名_函数名
 
 local function send_request (name, args)
     assert(user_fd, "--- agent send_request, user_fd is nil")
     ProtoProcess.Write (user_fd, name, args)
 end
-
-local Utils = require "common.utils"
-local msg_define = require "proto.msg_define"
 
 local function kick_self ()
 	skynet.call (gamed, "lua", "cmd_gamed_kick", skynet.self (), user_fd)
@@ -57,8 +54,7 @@ local function heartbeat_check ()
 	end
 end
 
-local traceback = debug.traceback
-local RPC = {} -- 在各个handler中各种定义处理，模块化，但必须确保函数不重名，所以一般 模块名_函数名
+
 -- local function handle_request (name, args, response)
 -- 	local f = REQUEST[name]
 -- 	if f then
@@ -131,7 +127,6 @@ end
 
 local CMD = {}
 function CMD.cmd_agent_open (fd, account, session)
-    isOnline = true
 	syslog.debugf ("-------- agent opened:"..account)
     database = skynet.uniqueservice ("database")
 
@@ -193,6 +188,7 @@ local function save_data()
 
 end
 
+-- 此时socket已断开
 function CMD.cmd_agent_close ()
     syslog.debugf ("--- cmd_agent_close:")
 
@@ -237,7 +233,6 @@ function CMD.cmd_agent_close ()
 	user = nil
 	user_fd = nil
 	RPC = nil
-    isOnline = false
 
     -- 通知服务器关掉这个agent的socket
 	skynet.call (gamed, "lua", "cmd_gamed_close", skynet.self (), account, session)
@@ -278,13 +273,13 @@ skynet.start (function ()
 	skynet.dispatch ("lua", function (_, _, command, ...)
 		local f = CMD[command]
 		if not f then
-			syslog.warn("unhandled message(%s)", command) 
+			syslog.warn("agnet unhandled message(%s)", command) 
 			return skynet.ret ()
 		end
 
 		local ok, ret = xpcall (f, traceback, ...)
 		if not ok then
-			syslog.errorf ("handle message(%s) failed : %s", command, ret) 
+			syslog.errorf ("agnet handle message(%s) failed : %s", command, ret) 
 			kick_self ()
 			return skynet.ret ()
 		end
