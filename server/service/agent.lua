@@ -130,7 +130,7 @@ local function get_random_name( ... )
 end
 
 local CMD = {}
-function CMD.cmd_agent_open (fd, account)
+function CMD.cmd_agent_open (fd, account, session)
     isOnline = true
 	syslog.debugf ("-------- agent opened:"..account)
     database = skynet.uniqueservice ("database")
@@ -151,7 +151,8 @@ function CMD.cmd_agent_open (fd, account)
 
 	user = { 
 		fd = fd, 
-		account = account,
+        account = account,
+		session = session,
         info = info,
 		RPC = {},
 		CMD = CMD,
@@ -195,53 +196,51 @@ end
 function CMD.cmd_agent_close ()
     syslog.debugf ("--- cmd_agent_close:")
 
-	local account
-	if user then
-		account = user.account
+    local account = user.account
+	local session = user.session
 
-		if user.map then -- 先离开 地图
-			skynet.call (user.map, "lua", "cmd_map_character_leave")
-			user.map = nil
-			map_handler:unregister (user)
-			aoi_handler:unregister (user)
-			move_handler:unregister (user)
-			combat_handler:unregister (user)
-		end
-
-		if user.world then -- 后离开 世界
-			skynet.call (user.world, "lua", "cmd_world_character_leave", user.character.id)
-			user.world = nil
-		end
-        -- dump(user.info, "--- userInfo")
-        local json = dbpacker.pack(user.info)
-        skynet.call (database, "lua", "account", "cmd_account_saveInfo", account, json)
-
-            -- get out, can fork, user will nil
-        -- skynet.fork(function()
-            local chatserver = skynet.uniqueservice ("chat_server")
-            local friendserver = skynet.uniqueservice ("friend_server")
-            local laborserver = skynet.uniqueservice ("labor_server")
-            skynet.call (chatserver, "lua", "cmd_offline", user.account)
-            -- skynet.call (friendserver, "lua", "cmd_offline", user.account)
-            -- skynet.call (laborserver, "lua", "cmd_offline", user.account)
-        -- end)
-
-		character_handler:save_info (user.character) -- 保存角色数据
-
-        character_handler:unregister (user)
-        labor_handler:unregister(user)
-        friend_handler:unregister(user)
-        world_handler:unregister(user)
-        gm_handler:unregister(user)
-
-		user = nil
-		user_fd = nil
-		RPC = nil
-        isOnline = false
+	if user.map then -- 先离开 地图
+		skynet.call (user.map, "lua", "cmd_map_character_leave")
+		user.map = nil
+		map_handler:unregister (user)
+		aoi_handler:unregister (user)
+		move_handler:unregister (user)
+		combat_handler:unregister (user)
 	end
 
+	if user.world then -- 后离开 世界
+		skynet.call (user.world, "lua", "cmd_world_character_leave", user.character.id)
+		user.world = nil
+	end
+    -- dump(user.info, "--- userInfo")
+    local json = dbpacker.pack(user.info)
+    skynet.call (database, "lua", "account", "cmd_account_saveInfo", account, json)
+
+        -- get out, can fork, user will nil
+    -- skynet.fork(function()
+        local chatserver = skynet.uniqueservice ("chat_server")
+        local friendserver = skynet.uniqueservice ("friend_server")
+        local laborserver = skynet.uniqueservice ("labor_server")
+        skynet.call (chatserver, "lua", "cmd_offline", user.account)
+        -- skynet.call (friendserver, "lua", "cmd_offline", user.account)
+        -- skynet.call (laborserver, "lua", "cmd_offline", user.account)
+    -- end)
+
+	character_handler:save_info (user.character) -- 保存角色数据
+
+    character_handler:unregister (user)
+    labor_handler:unregister(user)
+    friend_handler:unregister(user)
+    world_handler:unregister(user)
+    gm_handler:unregister(user)
+
+	user = nil
+	user_fd = nil
+	RPC = nil
+    isOnline = false
+
     -- 通知服务器关掉这个agent的socket
-	skynet.call (gamed, "lua", "close", skynet.self (), account)
+	skynet.call (gamed, "lua", "cmd_gamed_close", skynet.self (), account, session)
 end
 
 

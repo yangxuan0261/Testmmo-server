@@ -20,6 +20,16 @@ function gameserver.kick (fd)
 	gateserver.close_client (fd)
 end
 
+function gameserver.deal_pending_msg(fd, agent)
+    local queue = pending_msg[fd]
+    if queue == nil then return end
+    for _, t in pairs (queue) do -- 待处理消息逐一处理
+        syslog.noticef ("forward pending message to agent %d", agent)
+        skynet.rawcall(agent, "client", t.msg, t.sz)
+    end
+    pending_msg[fd] = nil
+end
+
 function gameserver.start (gamed)
 	local handler = {}
 
@@ -68,23 +78,15 @@ function gameserver.start (gamed)
 			local ok, account, session = xpcall (do_login, traceback, fd, msg, sz) -- 去登陆服认证
 			if ok then
 				syslog.noticef ("gameserver do_login auth ok, account:%d, session:%d", account, session)
-				local agent = gamed.login_handler (fd, account, session)
-				queue = pending_msg[fd]
-				for _, t in pairs (queue) do -- 待处理消息逐一处理
-					syslog.noticef ("forward pending message to agent %d", agent)
-					skynet.rawcall(agent, "client", t.msg, t.sz)
-				end
+				gamed.login_handler (fd, account, session)
 			else
 				syslog.warnf ("%s login failed : %s", addr, account)
 				gateserver.close_client (fd)
 			end
-
-			pending_msg[fd] = nil
 		end
 	end
 
 	local CMD = {}
-
 	function CMD.token (id, secret)
 		local id = tonumber (id)
 		login_token[id] = secret
