@@ -18,6 +18,7 @@ local gm_handler = require "agent.gm_handler"
 local world_handler = require "agent.world_handler"
 local friend_handler = require "agent.friend_handler"
 local labor_handler = require "agent.labor_handler"
+local chat_handler = require "agent.chat_handler"
 ----------- all handler end ------------
 
 local assert = syslog.assert
@@ -162,6 +163,8 @@ function CMD.cmd_agent_open (fd, account, session)
     labor_handler:register(user)
     friend_handler:register(user)
     world_handler:register(user)
+    chat_handler:register(user)
+    
 
     -- gm register
     gm_handler:register(user)
@@ -228,6 +231,7 @@ function CMD.cmd_agent_close ()
     labor_handler:unregister(user)
     friend_handler:unregister(user)
     world_handler:unregister(user)
+    chat_handler:unregister(user)
     gm_handler:unregister(user)
 
 	user = nil

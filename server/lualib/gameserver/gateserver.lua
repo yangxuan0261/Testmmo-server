@@ -92,10 +92,12 @@ function gateserver.start (handler)
 	end
 
 	function MSG.close (fd)
+        syslog.debugf("--------------- socket 已断开，MSG.close")
 		close_fd (fd) -- 不在这里关闭，因为有点延迟，agent 重登需要先 close 再 open。类似构造和析构的顺序
 	end
 
 	function MSG.error (fd, msg)
+        syslog.debugf("--------------- socket 已断开，MSG.error")
 		close_fd (fd)
 	end
 

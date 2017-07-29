@@ -25,6 +25,7 @@ function CMD.cmd_online(source, account)
         online = FlagOnline,
     }
     onlineTab[account] = accInfo
+    syslog.noticef("聊天服，用户上线，account:%d", account)
 end
 
 function CMD.cmd_offline(source, account)
@@ -32,21 +33,26 @@ function CMD.cmd_offline(source, account)
     assert(accInfo, string.format("Error, not found account:%d", account))
 
     onlineTab[account] = nil
+    syslog.noticef("聊天服，用户下线，account:%d", account)
 end
 
 function CMD.getOnline(source)
     return onlineTab
 end
 
-function CMD.cmd_chat_world_broadcast(source, account, msg)
-    local function sendMsg( ... )
+function CMD.cmd_chat_world_broadcast(source, acc, msg)
+    local account = acc
+        print("------------------- account, ", type(account), account)
+    -- local function sendMsg( ... )
+        print("------------------- account, ", type(account), account)
         local accInfo = onlineTab[account]
         assert(accInfo, string.format("Error, not found account:%d", account))
         for _,v in pairs(onlineTab) do
             skynet.call(v["agent"], "lua", "cmd_chat_world", account, msg)
         end
-    end
-    skynet.fork(sendMsg)
+    -- end
+    -- skynet.fork(sendMsg)
+    -- sendMsg()
 end
 
 local traceback = debug.traceback
