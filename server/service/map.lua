@@ -66,7 +66,7 @@ function CMD.open (conf)
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat map")
+    -- syslog.debugf("--- cmd_heart_beat map")
 end
 
 local traceback = debug.traceback

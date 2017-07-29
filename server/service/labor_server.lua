@@ -32,7 +32,7 @@ function CMD.open (source, conf)
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat laborserver")
+    -- syslog.debugf("--- cmd_heart_beat laborserver")
 end
 
 function CMD.create(source, account, laborName)

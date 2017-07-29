@@ -104,10 +104,17 @@ local function my_unpack(msg, sz)
     return ProtoProcess.ReadMsg(msg, sz)
 end
 
-local function my_dispatch(source, session, proto_name, ...)
+local function my_dispatch(source, session, proto_name, args, ...)
     local f = RPC[proto_name]
+    syslog.debugf("--- rpc name:%s", proto_name)
+    dump(args, "--- rpc args:")
     if f then
-        f(...)
+        local ok, ret = xpcall (f, traceback, args)
+        if not ok then
+            syslog.errorf("--- agent, rpc exec error, name:", proto_name)
+        end
+    else
+        syslog.warnf("--- agent, no rpc name:%s", proto_name)
     end
 end
 

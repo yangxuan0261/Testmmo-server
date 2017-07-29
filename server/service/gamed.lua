@@ -84,7 +84,7 @@ function gamed.command_handler (cmd, ...)
 end
 
 function gamed.auth_handler (session, token)
-    -- print("---------- gamed, ", debug.traceback("", 1))
+    -- syslog.debugf ("---------- gamed, %s", debug.traceback("", 1))
 	return skynet.call (logind, "lua", "verify", session, token)	
 end
 

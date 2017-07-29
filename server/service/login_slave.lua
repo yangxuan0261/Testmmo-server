@@ -36,6 +36,8 @@ function RPC.rpc_server_handshake (args)
     syslog.debugf ("--- handshake, username:%s", args.name)
     local accInfo = skynet.call (database, "lua", "account", "cmd_account_load_by_name", args.name)
     assert (accInfo, string.format("load account failed, account:%s ", args.name))
+    assert (accInfo.verifier, "rpc_server_handshake, verifier failed")
+    assert (args.client_pub, "rpc_server_handshake, client_pub failed")
     local session_key, _, pkey = srp.create_server_session_key (accInfo.verifier, args.client_pub)
     local challenge = srp.random ()
     local msg = {
@@ -167,7 +169,7 @@ function CMD.open (conf)
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat loginslave")
+    -- syslog.debugf("--- cmd_heart_beat loginslave")
 end
 
 local traceback = debug.traceback
@@ -175,13 +177,13 @@ skynet.start (function ()
     skynet.dispatch ("lua", function (_, _, command, ...)
         local f = CMD[command]
         if not f then
-            syslog.warnf ("unhandled message(%s)", command)
+            syslog.warnf ("login_slave, unhandled message(%s)", command)
             return skynet.ret ()
         end
 
         local ok, ret = xpcall (f, traceback, ...)
         if not ok then
-            syslog.warnf ("handle message(%s) failed : %s", command, ret)
+            syslog.warnf ("login_slave, handle message(%s) failed : %s", command, ret)
             -- kick_self ()
             return skynet.ret ()
         end

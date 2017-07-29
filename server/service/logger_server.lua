@@ -12,7 +12,7 @@ end
 
 function CMD.debug( serviceName, ...)
     _logId = _logId + 1
-    -- print("--- Logger.debug:", _logId, serviceName, ...)
+    -- syslog.debugf("--- Logger.debug, _logId:%d, %s", _logId, serviceName)
 end
 
 function CMD.warn()
@@ -24,7 +24,7 @@ function CMD.error()
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat loginslave")
+    -- syslog.debugf("--- cmd_heart_beat loginslave")
 end
 
 local traceback = debug.traceback

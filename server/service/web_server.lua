@@ -81,7 +81,7 @@ function CMD.open ()
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat friendserver")
+    -- syslog.debugf("--- cmd_heart_beat friendserver")
 end
 
 local traceback = debug.traceback

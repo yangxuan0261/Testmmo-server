@@ -7,6 +7,7 @@ local account = require "db.account"
 local character = require "db.character"
 local friend = require "db.friend"
 local labor = require "db.labor"
+local syslog = require "syslog"
 
 local center
 local group = {}
@@ -54,7 +55,7 @@ function CMD.open()
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat database")
+    -- syslog.debugf("--- cmd_heart_beat database")
 end
 
 

@@ -61,7 +61,7 @@ function CMD.verify (session, token)
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat loginslave")
+    -- syslog.debugf("--- cmd_heart_beat loginslave")
 end
 
 local traceback = debug.traceback

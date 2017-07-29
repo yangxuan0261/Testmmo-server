@@ -40,16 +40,14 @@ function CMD.getOnline(source)
     return onlineTab
 end
 
-function CMD.cmd_chat_world_broadcast(source, acc, msg)
-    local account = acc
-        print("------------------- account, ", type(account), account)
+function CMD.cmd_chat_world_broadcast(source, account, msg)
     -- local function sendMsg( ... )
-        print("------------------- account, ", type(account), account)
-        local accInfo = onlineTab[account]
-        assert(accInfo, string.format("Error, not found account:%d", account))
-        for _,v in pairs(onlineTab) do
-            skynet.call(v["agent"], "lua", "cmd_chat_world", account, msg)
-        end
+        syslog.debugf("------------------- cmd_chat_world_broadcast, account:%d ", account)
+        -- local accInfo = onlineTab[account]
+        -- assert(accInfo, string.format("Error, not found account:%d", account))
+        -- for _,v in pairs(onlineTab) do
+        --     skynet.call(v["agent"], "lua", "cmd_chat_world", account, msg)
+        -- end
     -- end
     -- skynet.fork(sendMsg)
     -- sendMsg()

@@ -47,7 +47,7 @@ function CMD.open ()
 end
 
 function CMD.cmd_heart_beat ()
-    -- print("--- cmd_heart_beat gdd")
+    -- syslog.debugf("--- cmd_heart_beat gdd")
 end
 
 local traceback = debug.traceback
