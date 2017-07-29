@@ -7,6 +7,7 @@ local netpack = require "skynet.netpack"
 local Utils = require "common.utils"
 local msg_define = require "proto.msg_define"
 local Packer = require "proto.proto_packer"
+local dump = require "common.dump"
 
 
 local gameserver = {}
@@ -52,8 +53,8 @@ function gameserver.start (gamed)
         local proto_id, params = string.unpack(">Hs2", msg)
         local proto_name = msg_define.id_2_name(proto_id)
         local paramTab = Utils.str_2_table(params)
-        print("--- proto_name:", proto_name)
-        print("--- params:", params)
+        syslog.debugf("--- proto_name:%s", proto_name)
+        dump(paramTab, "--- paramTab")
         return proto_name, paramTab
     end
 

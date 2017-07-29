@@ -121,7 +121,7 @@ local function aoi_update_response (id, scope)
 		return
 	end
 
-    print("~~~ debug, "..debug.traceback())
+    syslog.debugf("~~~ debug, %s", debug.traceback())
 	mark_flag (id, scope, "wantmore", true)
 	refresh_aoi (id, scope)	
 end

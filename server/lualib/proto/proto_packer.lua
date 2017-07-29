@@ -19,7 +19,6 @@ function ProtoPacker.pack(proto_name, msg)
 end
 
 function ProtoPacker.unpack(data)
-	-- print("数据包长",#data)
 	local proto_id = data:byte(1) * 256 + data:byte(2)
 	local params_str = data:sub(3+2)
 	local proto_name = msg_define.id_2_name(proto_id)

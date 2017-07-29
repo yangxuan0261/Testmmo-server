@@ -24,7 +24,7 @@ end
 function gateserver.close_client (fd)
 	local c = connection[fd]
 	if c then
-        print("---------- gateserver.close_client")
+        syslog.debugf("---------- gateserver.close_client")
 
 
 		socketdriver.close (fd)
@@ -134,7 +134,6 @@ function gateserver.start (handler)
 			return netpack.filter (queue, msg, sz) 
 		end,
 		dispatch = function (_, _, q, type, ...)
-            -- print("--- gateserver, dispatch, type:", type)
 			queue = q
 			if type then
 				return MSG[type] (...) 

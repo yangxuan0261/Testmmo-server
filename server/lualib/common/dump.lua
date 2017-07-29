@@ -1,89 +1,91 @@
--- -------------- mydump begin --------------
--- local print = print
--- local tostring = tostring
--- local type = type
--- local string = string
--- local pairs = pairs
-
--- local tab_space = "    "
--- local function  get_tab_space(deepth)
---     local str = ""
---     for i=1,deepth do
---         str = str .. tab_space
---     end
---     return str
--- end
-
--- local function mydump_tbl(tbl, deepth)
---     if type(tbl) ~= "table" then return end
---     deepth = deepth or 1
---     local str = string.format("{\n")
---     -- local str = string.format(""%s{ %s\n", get_tab_space(deepth - 1), tostring(tbl)) -- 打出table地址
-
---     for k,v in pairs(tbl) do
---         assert(type(k) ~= "table", "dont allow key = table")
---         k = tostring(k)
---         local line = string.format("%s\"%s\" = ", get_tab_space(deepth), k)
---         if type(v) == "table" then
---             line = string.format("%s%s,\n", line, mydump_tbl(v, deepth + 1))
---         else
---             line = string.format("%s%s,\n", line, tostring(v))
---         end
---         str = str .. line
---     end
-
---     str = string.format("%s%s}", str, get_tab_space(deepth - 1))
---     return str
--- end
-
-
--- local function mydump(obj, descr)
---     descr = descr or "mydump"
---     local info = string.format("\"%s\" = ", descr)
---     if type(obj) == "table" then
---         info = info .. mydump_tbl(obj, 2)
---     else
---         info = info .. tostring(obj)
---     end
---     -- info = string.format("%s\n-- %s end--", info, descr)
---     print(info)
-
--- end
-
--- return mydump
--- -------------- mydump end --------------
-
-local print = print
-local tconcat = table.concat
-local tinsert = table.insert
-local srep = string.rep
-local type = type
-local pairs = pairs
+-------------- mydump begin --------------
+local syslog = require "syslog"
 local tostring = tostring
-local next = next
+local type = type
+local string = string
+local pairs = pairs
 
-local function print_r(root)
-    local cache = {  [root] = "." }
-    local function _dump(t,space,name)
-        local temp = {}
-        for k,v in pairs(t) do
-            local key = tostring(k)
-            if cache[v] then
-                tinsert(temp,"+" .. key .. " {" .. cache[v].."}")
-            elseif type(v) == "table" then
-                local new_key = name .. "." .. key
-                cache[v] = new_key
-                tinsert(temp,"+" .. key .. _dump(v,space .. (next(t,k) and "|" or " " ).. srep(" ",#key),new_key))
-            else
-                tinsert(temp,"+" .. key .. " [" .. tostring(v).."]")
-            end
-        end
-        return tconcat(temp,"\n"..space)
+local tab_space = "    "
+local function  get_tab_space(deepth)
+    local str = ""
+    for i=1,deepth do
+        str = str .. tab_space
     end
-    print(_dump(root, "",""))
+    return str
 end
 
-return print_r
+local function mydump_tbl(tbl, deepth)
+    if type(tbl) ~= "table" then return end
+    deepth = deepth or 1
+    local str = string.format("{\n")
+    -- local str = string.format(""%s{ %s\n", get_tab_space(deepth - 1), tostring(tbl)) -- 打出table地址
+
+    for k,v in pairs(tbl) do
+        assert(type(k) ~= "table", "dont allow key = table")
+        k = tostring(k)
+        local line = string.format("%s\"%s\" = ", get_tab_space(deepth), k)
+        if type(v) == "table" then
+            line = string.format("%s%s,\n", line, mydump_tbl(v, deepth + 1))
+        else
+            line = string.format("%s%s,\n", line, tostring(v))
+        end
+        str = str .. line
+    end
+
+    str = string.format("%s%s}", str, get_tab_space(deepth - 1))
+    return str
+end
+
+
+local function mydump(obj, descr)
+    descr = descr or "mydump"
+    local info = string.format("\"%s\" = ", descr)
+    if type(obj) == "table" then
+        info = info .. mydump_tbl(obj, 2)
+    else
+        info = info .. tostring(obj)
+    end
+    -- info = string.format("%s\n-- %s end--", info, descr)
+    syslog.debugf(info)
+end
+
+return mydump
+-------------- mydump end --------------
+
+-- local tconcat = table.concat
+-- local tinsert = table.insert
+-- local srep = string.rep
+-- local type = type
+-- local pairs = pairs
+-- local tostring = tostring
+-- local next = next
+-- local syslog = require "syslog"
+
+-- local function print_r(root, descr)
+--     descr = descr or "--- dump"
+--     syslog.debugf("%s, type:%s", descr, type(root))
+--     if root == nil then return end
+--     local cache = {  [root] = "." }
+--     local function _dump(t,space,name)
+--         local temp = {}
+--         for k,v in pairs(t) do
+--             local key = tostring(k)
+--             if cache[v] then
+--                 tinsert(temp,"+" .. key .. " {" .. cache[v].."}")
+--             elseif type(v) == "table" then
+--                 local new_key = name .. "." .. key
+--                 cache[v] = new_key
+--                 tinsert(temp,"+" .. key .. _dump(v,space .. (next(t,k) and "|" or " " ).. srep(" ",#key),new_key))
+--             else
+--                 tinsert(temp,"+" .. key .. " [" .. tostring(v).."]")
+--             end
+--         end
+--         return tconcat(temp,"\n"..space)
+--     end
+--     syslog.debugf("%s", _dump(root, "",""))
+-- end
+
+-- return print_r
 
 
 

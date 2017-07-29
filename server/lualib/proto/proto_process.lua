@@ -17,13 +17,10 @@ ProtoProcess.Read = function(fd)
     local proto_id, params = string.unpack(">Hs2", msg)
     local proto_name = MsgDefine.id_2_name(proto_id)
     local paramTab = Utils.str_2_table(params)
-    -- print("--- proto_name:", proto_name)
-    -- print("--- params:", params)
     return proto_name, paramTab
 end
 
 ProtoProcess.Write = function(fd, protoName, msgTab)
-    -- print("------ my_send_msg:", proto_name)
     local id = MsgDefine.name_2_id(protoName)
     local msg_str = Utils.table_2_str(msgTab)
     local len = 2 + 2 + #msg_str

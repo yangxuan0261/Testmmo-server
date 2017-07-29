@@ -41,7 +41,7 @@ function RPC.rpc_server_labor_members (args)
     assert(args.id)
     local laborTab = skynet.call (laborserver, "lua", "get_members", args.id)
     for k,v in pairs(laborTab) do
-        print(k,v)
+        -- print(k,v)
     end
 end
 

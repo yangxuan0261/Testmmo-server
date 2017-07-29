@@ -23,9 +23,14 @@ local function write (priority, fmt, ...)
 	end
 end
 
-local function writef (priority, ...)
+local function writef (priority, fmt, ...)
 	if priority >= level then
-		skynet.error (syslog.prefix[priority] .. string.format (...))
+        local args = {...}
+        if #args > 0 then
+            skynet.error (syslog.prefix[priority] .. string.format (fmt, ...))
+        else
+            write(priority, fmt, ...)
+        end
 	end
 end
 

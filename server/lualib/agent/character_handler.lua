@@ -25,7 +25,7 @@ local function load_list (account)
 	if list then
 		list = dbpacker.unpack (list)
 	else
-        print("--- load_list, list is empty")
+        syslog.debug("--- load_list, list is empty")
 		list = {}
 	end
 	return list
@@ -57,7 +57,7 @@ function RPC.rpc_server_character_list ()
 end
 
 function RPC.rpc_server_rank_info ( dataTab )
-    -- print("-------------------- rpc_server_rank_info ok!")
+    -- syslog.debugf("-------------------- rpc_server_rank_info ok!")
     dump(dataTab, "--- rank_info")
 end
 
