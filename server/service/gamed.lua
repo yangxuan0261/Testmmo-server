@@ -85,17 +85,15 @@ end
 
 function gamed.auth_handler (session, token)
     -- syslog.debugf ("---------- gamed, %s", debug.traceback("", 1))
-	return skynet.call (logind, "lua", "verify", session, token)	
+	return skynet.call (logind, "lua", "cmd_server_verify", session, token)	
 end
 
 function gamed.login_handler (fd, account, session)
 	local info = online_account[account]
     local agent = info and info.agent
 
-    -- 多次登陆，类似挤号，保存相关信息，有两种情况，
+    -- 多次登陆，类似挤号，保存相关信息
     -- 1. 账号在其他地方登陆, 
-    -- 2. 断线重连,
-    -- 两者唯一的区别就是 session 会不同
 	if agent then 
 		syslog.warnf ("multiple login detected for account %d", account)
         skynet.call (agent, "lua", "cmd_agent_other_login") -- 

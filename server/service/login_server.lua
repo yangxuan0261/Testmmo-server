@@ -1,5 +1,4 @@
 local skynet = require "skynet"
--- local socket = require "socket"
 local socket = require "skynet.socket"
 
 local syslog = require "syslog"
@@ -37,27 +36,27 @@ function CMD.open (conf)
 		balance = balance + 1
 		if balance > nslave then balance = 1 end
             syslog.debugf ("---@ loginslave, connection %d from %s, balance:%d", fd, addr, balance)
-		skynet.call (s, "lua", "auth", fd, addr)
+		skynet.call (s, "lua", "cmd_slave_auth", fd, addr)
 	end)
 end
 
-function CMD.save_session (account, key, challenge)
+function CMD.cmd_server_save_session (account, key, challenge)
 	local session = session_id
 	session_id = session_id + 1
 
 	s = slave[(session % nslave) + 1]
-	skynet.call (s, "lua", "save_session", session, account, key, challenge)
+	skynet.call (s, "lua", "cmd_slave_save_session", session, account, key, challenge)
 	return session
 end
 
-function CMD.challenge (session, challenge)
+function CMD.cmd_server_challenge (session, challenge)
 	s = slave[(session % nslave) + 1]
-	return skynet.call (s, "lua", "challenge", session, challenge)
+	return skynet.call (s, "lua", "cmd_slave_challenge", session, challenge)
 end
 
-function CMD.verify (session, token)
+function CMD.cmd_server_verify (session, token)
 	local s = slave[(session % nslave) + 1]
-	return skynet.call (s, "lua", "verify", session, token)
+	return skynet.call (s, "lua", "cmd_slave_verify", session, token)
 end
 
 function CMD.cmd_heart_beat ()

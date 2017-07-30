@@ -21,8 +21,8 @@ end)
 
 function RPC.rpc_server_world_chat (args)
     assert(args.msg)
-    syslog.debugf("--- chat, account:%d, msg:%s", user.account, args.msg)
-    -- skynet.call(chatserver, "lua", "cmd_chat_world_broadcast", user.account, args.msg)
+    syslog.debugf("--- chat, nickName:%s, msg:%s, account:%d", user.info.nickName, args.msg, user.account)
+    skynet.call(chatserver, "lua", "cmd_chat_world_broadcast", user.account, args.msg)
 end
 
 function CMD.cmd_chat_world( account, msg )

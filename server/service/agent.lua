@@ -135,7 +135,6 @@ end
 
 local CMD = {}
 function CMD.cmd_agent_open (fd, account, session)
-	syslog.debugf ("-------- agent opened:"..account)
     database = skynet.uniqueservice ("database")
 
     local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", account)
@@ -165,6 +164,7 @@ function CMD.cmd_agent_open (fd, account, session)
 	RPC = user.RPC
 
     user.FlagDef = FlagDef
+    syslog.debugf ("-------- agent opened:%s", user.info.nickName)
 
     character_handler:register (user)
     labor_handler:register(user)
@@ -191,7 +191,7 @@ function CMD.cmd_agent_open (fd, account, session)
     -- end)
 
     -- send info to client
-    send_request("rpc_client_user_info", user.info) -- todo: 这里会导致程序崩溃
+    send_request("rpc_client_user_info", user.info)
 end
 
 local function save_data()
@@ -200,7 +200,7 @@ end
 
 -- 此时socket已断开
 function CMD.cmd_agent_close ()
-    syslog.debugf ("--- cmd_agent_close:")
+    syslog.debugf ("--- cmd_agent_close:%s", user.info.nickName)
 
     local account = user.account
 	local session = user.session

@@ -24,7 +24,7 @@ local RPC = {}
 
 -- todo: 认证失败，需要下行协议通知客户端
 
-local function close (fd)
+local function close_fd (fd)
 	if connection[fd] then
 		socket.close (fd)
 		connection[fd] = nil
@@ -64,7 +64,7 @@ function RPC.rpc_server_auth (args, accInfo, session_key, challenge)
     end
     
     challenge = srp.random ()
-    local session = skynet.call (master, "lua", "save_session", id, session_key, challenge)
+    local session = skynet.call (master, "lua", "cmd_server_save_session", id, session_key, challenge)
 
     local msg = {
         session = session,
@@ -76,7 +76,7 @@ end
 
 function RPC.rpc_server_challenge (args)
     assert (args and args.session and args.challenge)
-    local retTab = skynet.call (master, "lua", "challenge", args.session, args.challenge)
+    local retTab = skynet.call (master, "lua", "cmd_server_challenge", args.session, args.challenge)
     local token = retTab["token"]
     local challenge = retTab["challenge"]
     assert (token and challenge)
@@ -98,12 +98,12 @@ function CMD.init (m, id, conf)
     session_expire_time_in_second = conf.session_expire_time
 end
 
-function CMD.auth (fd, addr)
+function CMD.cmd_slave_auth (fd, addr)
 	connection[fd] = addr
 	skynet.timeout (auth_timeout, function ()
 		if connection[fd] == addr then
 			syslog.warnf ("connection %d from %s auth timeout!", fd, addr)
-			close (fd)
+			close_fd (fd)
 		end
 	end)
 
@@ -128,10 +128,10 @@ function CMD.auth (fd, addr)
     ProtoProcess.Write (fd, "rpc_client_challenge", msg)
 
     syslog.notice("------------------------ loginserver auth ok ------------------------")
-	close (fd)
+	close_fd (fd)
 end
 
-function CMD.save_session (session, account, key, challenge)
+function CMD.cmd_slave_save_session (session, account, key, challenge)
 	saved_session[session] = { account = account, key = key, challenge = challenge }
 	skynet.timeout (session_expire_time, function ()
 		local t = saved_session[session]
@@ -141,7 +141,7 @@ function CMD.save_session (session, account, key, challenge)
 	end)
 end
 
-function CMD.challenge (session, secret)
+function CMD.cmd_slave_challenge (session, secret)
 	local t = saved_session[session] or error ()
 
 	local text = aes.decrypt (secret, t.key) or error ()
@@ -153,7 +153,7 @@ function CMD.challenge (session, secret)
 	return { token = t.token, challenge = t.challenge }
 end
 
-function CMD.verify (session, secret)
+function CMD.cmd_slave_verify (session, secret)
 	local t = saved_session[session] or error ()
 
 	local text = aes.decrypt (secret, t.key) or error ()
