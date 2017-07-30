@@ -90,7 +90,7 @@ function RPC.rpc_server_challenge (args)
     return msg
 end
 
-function CMD.init (m, id, conf)
+function CMD.cmd_slave_init (m, id, conf)
     master = m
     database = skynet.uniqueservice ("database")
     auth_timeout = conf.auth_timeout * 100
@@ -164,7 +164,7 @@ function CMD.cmd_slave_verify (session, secret)
 	return t.account
 end
 
-function CMD.open (conf)
+function CMD.cmd_slave_open (conf)
     local moniter = skynet.uniqueservice ("moniter")
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 end

@@ -10,32 +10,78 @@ local slave = {}
 local nslave
 local gameserver = {}
 
+local slave_pool = {}
+local config = nil
+local connection = {}
+
+local function create_slave()
+    local s = skynet.newservice ("login_slave")
+    skynet.call (s, "lua", "cmd_slave_init", skynet.self(), config)
+    skynet.call (s, "lua", "cmd_slave_open")
+    return s
+end
+
+local function init_slave ()
+    local num = config.slaveName or 10
+    for i = 1,  num do
+        local s = create_slave()
+        table.insert (slave_pool, s)
+    end
+end
+
+local function get_slave()
+    local s = nil
+    if #slave_pool == 0 then
+        s = create_slave()
+    else
+        s = table.remove (slave_pool, 1)
+    end
+    syslog.noticef("%d remain in slave_pool", #slave_pool)
+    return s
+end
+
+local function check_connection(fd)
+
+end
+
+local function close_fd (fd)
+    if connection[fd] then
+        socket.close (fd)
+        connection[fd] = nil
+    end
+end
+
 local CMD = {}
 
 function CMD.open (conf)
+    config = conf
     local moniter = skynet.uniqueservice ("moniter")
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 
-	for i = 1, conf.slave do
-		local s = skynet.newservice ("login_slave")
-        skynet.call (s, "lua", "init", skynet.self (), i, conf)
-		skynet.call (s, "lua", "open")
-		table.insert (slave, s)
-	end
-	nslave = #slave
+    init_slave(conf.)
+
 
 	local host = conf.host or "0.0.0.0"
 	local port = assert (tonumber (conf.port))
 	local sock = socket.listen (host, port)
 
+    nslave = #slave
 	syslog.noticef ("listen on %s:%d", host, port)
 
-	local balance = 1
 	socket.start (sock, function (fd, addr)
-		local s = slave[balance]
-		balance = balance + 1
-		if balance > nslave then balance = 1 end
-            syslog.debugf ("---@ loginslave, connection %d from %s, balance:%d", fd, addr, balance)
+        local c = connection[fd]
+        if c then
+            close_fd(fd)
+        end
+
+        local s = get_slave()
+        c = {
+            fd = fd,
+            addr = addr,
+            slave = s,
+        }
+        connection[fd] = c
+        syslog.debugf ("--- login_server, client connection, fu:%d, from ip:%s", fd, addr)
 		skynet.call (s, "lua", "cmd_slave_auth", fd, addr)
 	end)
 end
