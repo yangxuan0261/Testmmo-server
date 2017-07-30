@@ -131,11 +131,15 @@ function gateserver.start (handler)
 		name = "socket",
 		id = skynet.PTYPE_SOCKET,
 		unpack = function (msg, sz)
+        print("--- gate_sever, unpack, sz:%d", sz)
 			return netpack.filter (queue, msg, sz) 
 		end,
-		dispatch = function (_, _, q, type, ...)
+		dispatch = function (a, b, q, type, ...)
+        print("--- gate_sever, dispatch, type:%s 111", a, b, q, type)
+
 			queue = q
 			if type then
+            print("--- gate_sever, dispatch, type:%s", type)
 				return MSG[type] (...) 
 			end
 		end,
