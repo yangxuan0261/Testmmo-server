@@ -32,7 +32,9 @@ local RPC = {} -- 在各个handler中各种定义处理，模块化，但必须�
 
 local function send_request (name, args)
     assert(user_fd, "--- agent send_request, user_fd is nil")
+    syslog.debugf("--- ProtoProcess.Write 111, name:%s", name)
     ProtoProcess.Write (user_fd, name, args)
+    syslog.debugf("--- ProtoProcess.Write 222, name:%s", name)
 end
 
 local function kick_self ()

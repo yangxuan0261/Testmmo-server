@@ -26,10 +26,13 @@ function RPC.rpc_server_world_chat (args)
 end
 
 function CMD.cmd_chat_world( account, msg )
-    local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", account)
-    assert(info)
-    info = dbpacker.unpack(info)
-    user.send_request ("rpc_client_word_chat", { account = info.account, nickName = info.nickName, msg = msg })
+    -- local info = skynet.call (database, "lua", "account", "cmd_account_loadInfo", account)
+    -- assert(info)
+    -- info = dbpacker.unpack(info)
+
+    syslog.debugf("--- cmd_chat_world, account:%s, msg:%s", account, msg)
+    user.send_request ("rpc_client_word_chat", { account = account, nickName = "TestName", msg = msg })
+
 end
 
 return handler

@@ -99,6 +99,7 @@ function CMD.init (m, id, conf)
 end
 
 function CMD.cmd_slave_auth (fd, addr)
+    syslog.notice("----------- cmd_slave_auth ------------------------")
 	connection[fd] = addr
 	skynet.timeout (auth_timeout, function ()
 		if connection[fd] == addr then
