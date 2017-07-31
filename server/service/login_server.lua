@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local syslog = require "syslog"
-local config = require "config.system"
 local netpack = require "skynet.netpack"
 local socketdriver = require "skynet.socketdriver"
 local aes = require "aes"
@@ -8,15 +7,10 @@ local aes = require "aes"
 local CMD = setmetatable ({}, { __gc = function () netpack.clear (queue) end })
 
 local session_id = 1
-local slave = {}
-local nslave
-local gameserver = {}
-
 local slave_pool = {}
 local config = nil
 local connection = {}
-local socket
-local saved_session = {}
+local saved_session = {} -- 等待游戏服来验证的数据
 
 local function create_slave()
     local s = skynet.newservice ("login_slave")
@@ -24,8 +18,7 @@ local function create_slave()
     return s
 end
 
-local function init_slave ()
-    local num = config.slaveName or 10
+local function init_slave_pool (num)
     for i = 1,  num do
         local s = create_slave()
         table.insert (slave_pool, s)
@@ -43,13 +36,21 @@ local function get_slave()
     return s
 end
 
-local function check_connection(fd)
+local function recycle_slave(s)
+    table.insert (slave_pool, s)
+end
 
+local function start_fd(fd)
+    if connection[fd] then
+        socketdriver.start (fd)
+    end
 end
 
 local function close_fd (fd)
-    if connection[fd] then
-        socket.close (fd)
+    local c = connection[fd]
+    if c then
+        socketdriver.close (fd)
+        recycle_slave(c.slave)
         connection[fd] = nil
     end
 end
@@ -59,17 +60,14 @@ function CMD.open (conf)
     local moniter = skynet.uniqueservice ("moniter")
     skynet.call(moniter, "lua", "register", SERVICE_NAME)
 
-    init_slave(conf.)
-
+    init_slave_pool(config.slave_num)
 
 	local addr = conf.host or "0.0.0.0"
 	local port = assert (tonumber (conf.port))
 
-    nslave = #slave
 	syslog.noticef ("--- login_server, listen on %s:%d", addr, port)
 
-
-    socket = socketdriver.listen (addr, port)
+    local socket = socketdriver.listen (addr, port)
     socketdriver.start (socket)
 end
 
@@ -94,7 +92,7 @@ function CMD.cmd_server_verify (session, token)
     local info = saved_session[session]
     if info then
         local text = aes.decrypt (token, info.session_key)
-        if text == info.token) then
+        if text == info.token then
             account = info.token
         end
     end
@@ -117,7 +115,7 @@ function CMD.cmd_slave_verify (session, secret)
     return t.account
 end
 
-function CMD.cmd_server_close_slave (fd)
+function CMD.cmd_server_close_slave (fd, auth_flag)
     close_fd(fd)
 end
 
@@ -141,6 +139,8 @@ function MSG.open (fd, addr)
     connection[fd] = c
     syslog.debugf ("--- login_server, client connection, fu:%d, from ip:%s", fd, addr)
     skynet.call (s, "lua", "cmd_slave_enter", fd, addr)
+
+    start_fd(fd)
 end
 
 function MSG.close (fd)
@@ -190,6 +190,11 @@ skynet.register_protocol {
             return MSG[type] (...) 
         end
     end,
+}
+
+skynet.register_protocol {
+    name = "client",
+    id = skynet.PTYPE_CLIENT,
 }
 
 local traceback = debug.traceback

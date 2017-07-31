@@ -1,7 +1,5 @@
 local skynet = require "skynet"
 
-local config = require "config.system"
-
 local syslog = {
 	prefix = {
         "D| ",
@@ -82,6 +80,6 @@ function syslog.assert (...)
     assert(...)
 end
 
-syslog.level (tonumber (config.log_level) or 3)
+syslog.level (1)
 
 return syslog

@@ -7,16 +7,14 @@ local dump = require "common.dump"
 local ProtoProcess = require "proto.proto_process"
 
 local traceback = debug.traceback
-local assert = syslog.assert
+-- local assert = syslog.assert
 
 local master
 local database
 local auth_timeout
 local session_expire_time
 local session_expire_time_in_second
-local saved_session = nil
 
-local slaved = {}
 local CMD = {}
 local RPC = {}
 local user_fd = nil
@@ -37,10 +35,9 @@ local function close_fd (auth_flag, msg)
         syslog.notice("------ login_slave auth failed ------")
 	end
 
-    skynet.call (master, "lua", "cmd_server_close_slave", user_fd)
+    skynet.call (master, "lua", "cmd_server_close_slave", user_fd, auth_flag)
 
     user_fd = nil
-    saved_session = nil
     auto_info = nil
 end
 
@@ -104,7 +101,7 @@ function RPC.rpc_server_auth (args)
 end
 
 local function get_challenge (session, secret)
-    local sessioin_key = auth_info.auth_info.session_key
+    local sessioin_key = auth_info.session_key
     local challenge = auth_info.challenge
 
     local text = aes.decrypt (secret, sessioin_key)
@@ -117,6 +114,7 @@ end
 function RPC.rpc_server_challenge (args)
     assert (args and args.session and args.challenge)
     local retTab = get_challenge(args.session, args.challenge)
+    dump(args, "--- rpc_server_challenge 666")
     local token = retTab["token"]
     assert (token)
 
@@ -176,7 +174,7 @@ local function my_dispatch(source, session, proto_name, args, ...)
     if f then
         local ok, ret = xpcall (f, traceback, args)
         if not ok then
-            syslog.errorf("--- login_slave, rpc exec error, name:", proto_name)
+            syslog.errorf("--- login_slave, rpc exec error, name:%s", proto_name)
         end
     else
         syslog.warnf("--- login_slave, no rpc name:%s", proto_name)
