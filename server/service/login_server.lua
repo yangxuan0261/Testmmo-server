@@ -105,16 +105,6 @@ function CMD.cmd_server_verify (session, token)
 	return account
 end
 
-function CMD.cmd_slave_verify (session, secret)
-    local t = saved_session[session] or error ()
-
-    local text = aes.decrypt (secret, t.key) or error ()
-    assert (text == t.token)
-    t.token = nil
-
-    return t.account
-end
-
 function CMD.cmd_server_close_slave (fd, auth_flag)
     close_fd(fd)
 end
