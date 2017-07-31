@@ -53,8 +53,8 @@ function gameserver.start (gamed)
         local proto_id, params = string.unpack(">Hs2", msg)
         local proto_name = msg_define.id_2_name(proto_id)
         local paramTab = Utils.str_2_table(params)
-        syslog.debugf("--- proto_name:%s", proto_name)
-        dump(paramTab, "--- paramTab")
+        -- syslog.debugf("--- proto_name:%s", proto_name)
+        -- dump(paramTab, "--- paramTab")
         return proto_name, paramTab
     end
 

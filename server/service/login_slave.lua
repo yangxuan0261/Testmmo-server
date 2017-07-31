@@ -38,7 +38,7 @@ local function close_fd (auth_flag, msg)
     skynet.call (master, "lua", "cmd_server_close_slave", user_fd, auth_flag)
 
     user_fd = nil
-    auto_info = nil
+    auth_info = nil
 end
 
 function RPC.rpc_server_handshake (args)
@@ -91,6 +91,7 @@ function RPC.rpc_server_auth (args)
     -- 保存 session
     auth_info.account = account
     auth_info.session = session
+    auth_info.challenge = challenge
 
     local msg = {
         session = session,
@@ -100,12 +101,11 @@ function RPC.rpc_server_auth (args)
     ProtoProcess.Write (user_fd, "rpc_client_auth", msg)
 end
 
-local function get_challenge (session, secret)
+local function get_challenge (secret)
     local sessioin_key = auth_info.session_key
     local challenge = auth_info.challenge
-
     local text = aes.decrypt (secret, sessioin_key)
-    assert (text == challenge)
+    assert (text == challenge, "--- error, text != challenge")
 
     local token = srp.random ()
     return { token = token }
@@ -113,8 +113,7 @@ end
 
 function RPC.rpc_server_challenge (args)
     assert (args and args.session and args.challenge)
-    local retTab = get_challenge(args.session, args.challenge)
-    dump(args, "--- rpc_server_challenge 666")
+    local retTab = get_challenge(args.challenge)
     local token = retTab["token"]
     assert (token)
 
@@ -172,7 +171,7 @@ end
 local function my_dispatch(source, session, proto_name, args, ...)
     local f = RPC[proto_name]
     if f then
-        local ok, ret = xpcall (f, traceback, args)
+        local ok, _ = xpcall (f, traceback, args)
         if not ok then
             syslog.errorf("--- login_slave, rpc exec error, name:%s", proto_name)
         end
