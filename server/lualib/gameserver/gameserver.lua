@@ -62,9 +62,8 @@ function gameserver.start (gamed)
 		local name, args = my_read_msg(fd, msg, sz)
 		assert (name == "rpc_server_login_gameserver")
 		assert (args.session and args.token)
-		local session = tonumber (args.session) or error ()
-		local account = gamed.auth_handler (session, args.token) or error ()
-		assert (account)
+		local session = tonumber (args.session)
+		local account = gamed.auth_handler (session, args.token)
 		return account, session
 	end
 
@@ -77,11 +76,11 @@ function gameserver.start (gamed)
 			pending_msg[fd] = {}
 
 			local ok, account, session = xpcall (do_login, traceback, fd, msg, sz) -- 去登陆服认证
-			if ok then
+			if ok and account then
 				syslog.noticef ("gameserver do_login auth ok, account:%d, session:%d", account, session)
 				gamed.login_handler (fd, account, session)
 			else
-				syslog.warnf ("%s login failed : %s", addr, account)
+				syslog.warnf ("--- gameserver, do_login failed")
 				gateserver.close_client (fd)
 			end
 		end

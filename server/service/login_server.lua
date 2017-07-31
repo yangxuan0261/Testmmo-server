@@ -88,17 +88,21 @@ function CMD.cmd_server_save_auth_info (account, session, session_key, token)
 end
 
 function CMD.cmd_server_verify (session, token)
-    local account = 0
+    if session == nil then return nil end
+
+    local account = nil
     local info = saved_session[session]
     if info then
         local text = aes.decrypt (token, info.session_key)
         if text == info.token then
-            account = info.token
+            account = info.account
+        else
+            syslog.errorf("--- login_server, verify failed, text ~= info.token")
         end
     end
 
-    if account == 0 then
-        syslog.errorf("--- login_server, verify failed!")
+    if account ~= nil then
+        syslog.debugf("--- login_server, verify from gamed is success, account:%d", account)
     end
 
     saved_session[session] = nil

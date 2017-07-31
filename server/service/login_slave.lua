@@ -51,8 +51,11 @@ function RPC.rpc_server_handshake (args)
     local session_key, _, pkey = srp.create_server_session_key (accInfo.verifier, args.client_pub)
     local challenge = srp.random ()
 
+    syslog.notice("------ rpc_server_handshake 00 ------")
+    
     auth_info = {
         accInfo = accInfo,
+        username = args.name,
         session_key = session_key,
         challenge = challenge,
         account = nil,
@@ -65,6 +68,8 @@ function RPC.rpc_server_handshake (args)
         server_pub = pkey,
         challenge = challenge,
     }
+    syslog.notice("------ rpc_server_handshake 11 ------")
+
     ProtoProcess.Write (user_fd, "rpc_client_handshake", msg)
 end
 
@@ -83,6 +88,8 @@ function RPC.rpc_server_auth (args)
         account = uuid.gen ()
         local password = aes.decrypt (args.password, session_key)
         skynet.call (database, "lua", "account", "cmd_account_create", account, accInfo.name, password)
+
+        local baseInfo = {}
     end
     
     challenge = srp.random ()

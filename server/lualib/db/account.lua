@@ -51,7 +51,8 @@ function CMD.cmd_account_create (id, name, password)
 	assert (id and name and #name < 24 and password and #password < 24, "invalid argument")
 
 	local connection, key = make_key (name)
-	assert (connection:hsetnx (key, "account", id) ~= 0, "create account failed")
+    assert (connection:hsetnx (key, "account", id) ~= 0, "create account failed")
+	assert (connection:hsetnx (key, "username", name) ~= 0, "create account failed")
 
 	local salt, verifier = srp.create_verifier (name, password)
 	assert (connection:hmset (key, "salt", salt, "verifier", verifier) ~= 0, "save account verifier failed")
