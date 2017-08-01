@@ -7,6 +7,14 @@ local serTab = {}
 
 local CMD = {}
 function CMD.open()
+    -- local timer_mgr = require "common.timer.timer_mgr"
+    -- timer_mgr = timer_mgr.new(0.2)
+
+    -- local function hello()
+    --     syslog.debug("--- testing test")
+    -- end
+    -- local id = timer_mgr:add_timer(3, hello, true)
+
 end
 
 function CMD.register(source, _serName)
