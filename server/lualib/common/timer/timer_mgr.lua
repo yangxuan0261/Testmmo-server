@@ -60,4 +60,10 @@ function timer_mgr:get_timer(id)
     end
 end
 
+function timer_mgr:stop()
+    for k,v in pairs(_timer_tbl) do
+        _timer_tbl[k] = nil
+    end
+end
+
 return timer_mgr
