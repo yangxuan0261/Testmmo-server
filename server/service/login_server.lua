@@ -151,7 +151,7 @@ end
 local function dispatch_msg (fd, msg, sz)
     local c = connection[fd]
     local slave = c and c.slave
-    if slave then -- 如果有对应的agent连接，则转发给对应的agent处理
+    if slave then -- 如果有对应的slave连接，则转发给对应的slave处理
         skynet.redirect (slave, 0, "client", 0, msg, sz)
     else -- 否则让继承这个gateserver的服务中的handler.message处理
         -- handler.message (fd, msg, sz)

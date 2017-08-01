@@ -5,6 +5,7 @@ local aes = require "aes"
 local uuid = require "uuid"
 local dump = require "common.dump"
 local ProtoProcess = require "proto.proto_process"
+local netpack = require "skynet.netpack"
 
 local traceback = debug.traceback
 -- local assert = syslog.assert
@@ -51,8 +52,6 @@ function RPC.rpc_server_handshake (args)
     local session_key, _, pkey = srp.create_server_session_key (accInfo.verifier, args.client_pub)
     local challenge = srp.random ()
 
-    syslog.notice("------ rpc_server_handshake 00 ------")
-    
     auth_info = {
         accInfo = accInfo,
         username = args.name,
@@ -68,7 +67,6 @@ function RPC.rpc_server_handshake (args)
         server_pub = pkey,
         challenge = challenge,
     }
-    syslog.notice("------ rpc_server_handshake 11 ------")
 
     ProtoProcess.Write (user_fd, "rpc_client_handshake", msg)
 end
@@ -123,8 +121,8 @@ function RPC.rpc_server_challenge (args)
     local retTab = get_challenge(args.challenge)
     local token = retTab["token"]
     assert (token)
-auth_info.token = token
-
+    
+    auth_info.token = token -- 更新 token
     -- 保存相关认证数据 token
     skynet.call (master, "lua", "cmd_server_save_auth_info"
                  , auth_info.account
@@ -150,7 +148,7 @@ function CMD.cmd_slave_enter (fd, addr)
             close_fd(false)
         end
     end)
-    syslog.notice("------ login_slave auth begin ------")
+    syslog.noticef("------ login_slave auth begin, fd:%d ip:%s ------", fd, addr)
 end
 
 function CMD.cmd_slave_leave (fd, addr)
@@ -173,10 +171,12 @@ function CMD.cmd_heart_beat ()
 end
 
 local function my_unpack(msg, sz)
-    return ProtoProcess.ReadMsg(msg, sz)
+    return netpack.tostring(msg, sz)
 end
 
-local function my_dispatch(source, session, proto_name, args, ...)
+local function my_dispatch(source, session, msg, ...)
+    local proto_name, args = ProtoProcess.ReadMsg(msg)
+
     local f = RPC[proto_name]
     if f then
         local ok, _ = xpcall (f, traceback, args)

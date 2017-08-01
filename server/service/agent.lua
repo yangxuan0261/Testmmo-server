@@ -7,6 +7,7 @@ local FlagDef = require "config.FlagDef"
 local dump = require "common.dump"
 local ProtoProcess = require "proto.proto_process"
 local syslog = require "syslog"
+local netpack = require "skynet.netpack"
 
 ----------- all handler begin ------------
 local character_handler = require "agent.character_handler"
@@ -101,31 +102,6 @@ end
 -- 		kick_self ()
 -- 	end
 -- end
-
-local function my_unpack(msg, sz)
-    return ProtoProcess.ReadMsg(msg, sz)
-end
-
-local function my_dispatch(source, session, proto_name, args, ...)
-    local f = RPC[proto_name]
-    syslog.debugf("--- rpc name:%s", proto_name)
-    dump(args, "--- rpc args:")
-    if f then
-        local ok, ret = xpcall (f, traceback, args)
-        if not ok then
-            syslog.errorf("--- agent, rpc exec error, name:", proto_name)
-        end
-    else
-        syslog.warnf("--- agent, no rpc name:%s", proto_name)
-    end
-end
-
-skynet.register_protocol { -- 注册与客户端交互的协议
-	name = "client",
-	id = skynet.PTYPE_CLIENT,
-    unpack = my_unpack,
-    dispatch = my_dispatch,
-}
 
 -- todo: 这个要做成一个服务，确保随机到名字不重叠
 local name_tbl = require "config.account_name"
@@ -281,6 +257,32 @@ function CMD.world_enter (world)
     syslog.noticef (string.format ("--- agent, world_enter, character_handler:unregister"))
     return user.character.general.map, user.character.movement.pos
 end
+
+
+
+local function my_unpack(msg, sz)
+    return netpack.tostring(msg, sz)
+end
+
+local function my_dispatch(source, session, msg, ...)
+    local proto_name, args = ProtoProcess.ReadMsg(msg)
+    local f = RPC[proto_name]
+    if f then
+        local ok, ret = xpcall (f, traceback, args)
+        if not ok then
+            syslog.errorf("--- agent, rpc exec error, name:", proto_name)
+        end
+    else
+        syslog.warnf("--- agent, no rpc name:%s", proto_name)
+    end
+end
+
+skynet.register_protocol { -- 注册与客户端交互的协议
+    name = "client",
+    id = skynet.PTYPE_CLIENT,
+    unpack = my_unpack,
+    dispatch = my_dispatch,
+}
 
 skynet.start (function ()
 	skynet.dispatch ("lua", function (_, _, command, ...)
