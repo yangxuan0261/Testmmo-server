@@ -123,6 +123,7 @@ function RPC.rpc_server_challenge (args)
     local retTab = get_challenge(args.challenge)
     local token = retTab["token"]
     assert (token)
+auth_info.token = token
 
     -- 保存相关认证数据 token
     skynet.call (master, "lua", "cmd_server_save_auth_info"

@@ -93,19 +93,20 @@ function CMD.cmd_server_verify (session, token)
     local account = nil
     local info = saved_session[session]
     if info then
-        local text = aes.decrypt (token, info.session_key)
+        local text = aes.decrypt (token, info.session_key) or error ()
+        print("--- text", text)
+        print("--- info.token", info.token)
         if text == info.token then
             account = info.account
         else
             syslog.errorf("--- login_server, verify failed, text ~= info.token")
         end
+        saved_session[session] = nil
     end
 
     if account ~= nil then
         syslog.debugf("--- login_server, verify from gamed is success, account:%d", account)
     end
-
-    saved_session[session] = nil
 	return account
 end
 

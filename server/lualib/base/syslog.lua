@@ -2,11 +2,11 @@ local skynet = require "skynet"
 
 local syslog = {
 	prefix = {
-        "D| ",
-		"I| ",
-		"N| ",
-		"W| ",
-		"E| ",
+        string.format("【D|%15.15s】", SERVICE_NAME),
+        string.format("【I|%15.15s】", SERVICE_NAME),
+        string.format("【N|%15.15s】", SERVICE_NAME),
+        string.format("【W|%15.15s】", SERVICE_NAME),
+        string.format("【E|%15.15s】", SERVICE_NAME),
 	},
 }
 
