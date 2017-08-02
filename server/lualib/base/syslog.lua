@@ -1,4 +1,7 @@
 local skynet = require "skynet"
+local string = string
+local assert = assert
+local traceback = debug.traceback
 
 local syslog = {
 	prefix = {
@@ -79,6 +82,11 @@ end
 function syslog.assert (...)
     assert(...)
 end
+
+function syslog.traceback (...)
+    traceback(...)
+end
+
 
 syslog.level (1)
 

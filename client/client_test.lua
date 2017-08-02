@@ -1,19 +1,20 @@
 package.cpath = package.cpath .. ";../3rd/skynet/luaclib/?.so;../server/luaclib/?.so"
-package.path = package.path .. ";../3rd/skynet/lualib/?.lua;../common/?.lua"
+package.path = package.path .. ";../3rd/skynet/lualib/?.lua;../server/lualib/?.lua"
 
-local print_r = require "common.dump"
-local socket = require "clientsocket"
+-- local print_r = require "common.dump"
+local socket = require "client.socket"
 local sproto = require "sproto"
 local srp = require "srp"
 local aes = require "aes"
-local login_proto = require "proto.login_proto"
-local game_proto = require "proto.game_proto"
-local constant = require "constant"
+local constant = {default_password = "abc"}
 
-local username = arg[1]
-local password = arg[2]
+local Utils = require "common.utils"
+local MsgDefine = require "proto.msg_define"
 
-local user = { name = arg[1], password = arg[2] }
+local username = "test_99"
+local password = "pwd_99"
+
+local user = { name = username, password = password }
 
 if not user.name then
 	local f = io.open ("anonymous", "r")
@@ -48,24 +49,17 @@ local gameserver = {
 	name = "gameserver",
 }
 
-local host = sproto.new (login_proto.s2c):host "package"
-local request = host:attach (sproto.new (login_proto.c2s))
 local fd 
 local game_fd
 
-local function send_message (fd, msg)
-	local package = string.pack (">s2", msg)
-	socket.send (fd, package)
-end
-
-local session = {}
-local session_id = 0
 local function send_request (name, args)
-	print ("send_request", name)
-	session_id = session_id + 1
-	local str = request (name, args, session_id) -- 转化为sproto的字符串
-	send_message (fd, str) 
-	session[session_id] = { name = name, args = args } -- 保存上行数据，下行时检查
+    print("------------- send_request", name, args)
+
+    local proto_id = MsgDefine.name_2_id(name)
+    local params_str = Utils.table_2_str(args)
+    local len = 2 + 2 + #params_str
+    local data = Utils.int16_2_bytes(len) .. Utils.int16_2_bytes(proto_id) .. Utils.int16_2_bytes(#params_str) .. params_str
+    socket.send (fd, data)
 end
 
 local function unpack (text)
@@ -105,85 +99,66 @@ local function handle_request (name, args, response) -- 处理服务端的请求
     print ("^^^@ request from server", name)
     
 	if args then
-		print_r (args)
+		-- print_r (args)
 	else
 		print "empty argument"
-	end
-
-	if name:sub (1, 3) == "aoi" and  name ~= "aoi_remove" then
-		if response then
-            print ("--- response to server", name)
-			send_message (fd, response (rr)) -- rr是返回给服务端的数据
-		end
 	end
 end
 
 local RESPONSE = {}
 
-function RESPONSE:handshake (args)
+function RESPONSE.rpc_client_handshake (args)
 	print ("RESPONSE.handshake")
-	local name = self.name
-	assert (name == user.name)
-
+	local name = user.name
 	if args.user_exists then
 		local key = srp.create_client_session_key (name, user.password, args.salt, user.private_key, user.public_key, args.server_pub)
 		user.session_key = key
 		local ret = { challenge = aes.encrypt (args.challenge, key) }
-		send_request ("auth", ret)
+		send_request ("rpc_server_auth", ret)
 	else
 		print (name, constant.default_password)
 		local key = srp.create_client_session_key (name, constant.default_password, args.salt, user.private_key, user.public_key, args.server_pub)
 		user.session_key = key
 		local ret = { challenge = aes.encrypt (args.challenge, key), password = aes.encrypt (user.password, key) }
-		send_request ("auth", ret)
+		send_request ("rpc_server_auth", ret)
 	end
 end
 
-function RESPONSE:auth (args)
+function RESPONSE.rpc_client_auth (args)
 	print ("RESPONSE.auth")
 
 	user.session = args.session
 	local challenge = aes.encrypt (args.challenge, user.session_key)
-	send_request ("challenge", { session = args.session, challenge = challenge })
+	send_request ("rpc_server_challenge", { session = args.session, challenge = challenge })
 end
 
-function RESPONSE:challenge (args)
-	print ("RESPONSE.challenge")
+function RESPONSE.rpc_client_challenge (args)
+	print ("-------------------- RESPONSE.challenge, login ok, toker:", args.token)
 
-	local token = aes.encrypt (args.token, user.session_key)
+	-- local token = aes.encrypt (args.token, user.session_key)
 
-	fd = assert (socket.connect (gameserver.addr, gameserver.port))
-	print (string.format ("game server connected, fd = %d", fd))
-	send_request ("login", { session = user.session, token = token })
+	-- fd = assert (socket.connect (gameserver.addr, gameserver.port))
+	-- print (string.format ("game server connected, fd = %d", fd))
+	-- send_request ("login", { session = user.session, token = token })
 
-	host = sproto.new (game_proto.s2c):host "package"
-	request = host:attach (sproto.new (game_proto.c2s))
 
-	send_request ("character_list")
+
+	-- send_request ("character_list")
 end
 
-local function handle_response (id, args)
-	local s = assert (session[id])
-	session[id] = nil
-	local f = RESPONSE[s.name] -- 检查是否有这个方法, 比如一个上行：send_request ("auth", ret), session[id]则会从上行保存的记录中，查找是否有这次会话，有则检查是否在 RESPONSE响应表 中有auth这个方法，有则执行
 
-    print ("^^^# response from server", s.name)
-
-	if f then
-        print "--- have func"
-		f (s.args, args)
-	else
-		print "response"
-		print_r (args)
-	end
-end
-
-local function handle_message (t, ...)
-	if t == "REQUEST" then
-		handle_request (...) -- 处理服务端的请求
-	else
-		handle_response (...) -- 处理请求服务端后的响应（服务端返回）
-	end
+local function handle_message (data)
+    local proto_id = data:byte(1) * 256 + data:byte(2)
+    local params_str = data:sub(3+2)
+    -- print(proto_id, params_str)
+    local proto_name = MsgDefine.id_2_name(proto_id)
+    local paramTab = Utils.str_2_table(params_str)
+    local f = RESPONSE[proto_name]
+    if f then
+        f(paramTab)
+    else
+        print("--- handle_response, not found func:"..s.name)
+    end
 end
 
 local last = ""
@@ -195,7 +170,7 @@ local function dispatch_message ()
 			break
 		end
 
-		handle_message (host:dispatch (v)) -- sproto解析来自服务端的数据（服务端也是用sproto编码，所以这里用它解码）
+		handle_message (v) -- sproto解析来自服务端的数据（服务端也是用sproto编码，所以这里用它解码）
 	end
 end
 
@@ -204,7 +179,7 @@ user.private_key = private_key
 user.public_key = public_key 
 fd = assert (socket.connect (server, login_port))
 print (string.format ("login server connected, fd = %d", fd))
-send_request ("handshake", { name = user.name, client_pub = public_key })
+send_request ("rpc_server_handshake", { name = user.name, client_pub = public_key })
 
 local HELP = {}
 

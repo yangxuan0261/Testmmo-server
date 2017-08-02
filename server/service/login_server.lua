@@ -132,7 +132,7 @@ function MSG.open (fd, addr)
         slave = s,
     }
     connection[fd] = c
-    syslog.debugf ("--- login_server, client connection, fu:%d, from ip:%s", fd, addr)
+    syslog.debugf ("--- login_server, client connection, fd:%d, from ip:%s", fd, addr)
     skynet.call (s, "lua", "cmd_slave_enter", fd, addr)
 
     start_fd(fd)

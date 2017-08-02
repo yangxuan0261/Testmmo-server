@@ -30,10 +30,10 @@ end
 local function close_fd (auth_flag, msg)
     assert(user_fd, "--- login_slave, close_fd error, user_fd is nil")
 	if auth_flag then
-        syslog.notice("------ login_slave auth success ------")
+        syslog.noticef("------------ auth success, usernme:[%s] ------------", auth_info.username)
     else
         -- todo: 认证失败，需要下行协议通知客户端
-        syslog.notice("------ login_slave auth failed ------")
+        syslog.noticef("------------ auth failed, usernem:[%s] ------------", auth_info.username)
 	end
 
     skynet.call (master, "lua", "cmd_server_close_slave", user_fd, auth_flag)
@@ -195,7 +195,6 @@ skynet.register_protocol { -- 注册与客户端交互的协议
     dispatch = my_dispatch,
 }
 
-local traceback = debug.traceback
 skynet.start (function ()
     skynet.dispatch ("lua", function (_, _, command, ...)
         local f = CMD[command]
