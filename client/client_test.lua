@@ -1,18 +1,22 @@
 package.cpath = package.cpath .. ";../3rd/skynet/luaclib/?.so;../server/luaclib/?.so"
 package.path = package.path .. ";../3rd/skynet/lualib/?.lua;../server/lualib/?.lua"
+package.path = package.path .. ";../?.lua;"
 
 -- local print_r = require "common.dump"
 local socket = require "client.socket"
 local sproto = require "sproto"
 local srp = require "srp"
 local aes = require "aes"
-local constant = {default_password = "abc"}
 
 local Utils = require "common.utils"
 local MsgDefine = require "proto.msg_define"
 
-local username = "test_99"
-local password = "pwd_99"
+local username = arg[1]
+local password = arg[2]
+print("----------------- begin, ", username, password)
+
+-- local constant = {default_password = "123abcDef$%^"}
+local constant = require "common.constant"
 
 local user = { name = username, password = password }
 
@@ -68,7 +72,7 @@ local function unpack (text)
 		return nil, text
 	end
 	local s = text:byte (1) * 256 + text:byte (2)
-    print("--- s", size, s)--- s    201 199
+    -- print("--- s", size, s)--- s    201 199
 
 	if size < s + 2 then
 		return nil, text
@@ -108,14 +112,15 @@ end
 local RESPONSE = {}
 
 function RESPONSE.rpc_client_handshake (args)
-	print ("RESPONSE.handshake")
 	local name = user.name
 	if args.user_exists then
+    print ("RESPONSE.handshake --- exit")
 		local key = srp.create_client_session_key (name, user.password, args.salt, user.private_key, user.public_key, args.server_pub)
 		user.session_key = key
 		local ret = { challenge = aes.encrypt (args.challenge, key) }
 		send_request ("rpc_server_auth", ret)
 	else
+    print ("RESPONSE.handshake --- not exit")
 		print (name, constant.default_password)
 		local key = srp.create_client_session_key (name, constant.default_password, args.salt, user.private_key, user.public_key, args.server_pub)
 		user.session_key = key
@@ -133,7 +138,7 @@ function RESPONSE.rpc_client_auth (args)
 end
 
 function RESPONSE.rpc_client_challenge (args)
-	print ("-------------------- RESPONSE.challenge, login ok, toker:", args.token)
+	print ("-------------------- RESPONSE.challenge, login ok, toker get!!!")
 
 	-- local token = aes.encrypt (args.token, user.session_key)
 
@@ -178,7 +183,7 @@ local private_key, public_key = srp.create_client_key ()
 user.private_key = private_key
 user.public_key = public_key 
 fd = assert (socket.connect (server, login_port))
-print (string.format ("login server connected, fd = %d", fd))
+-- print (string.format ("login server connected, fd = %d", fd))
 send_request ("rpc_server_handshake", { name = user.name, client_pub = public_key })
 
 local HELP = {}
@@ -319,14 +324,14 @@ function HELP.character_create ()
 ]]
 end
 
-print ('type "help" to see all available command.')
+-- print ('type "help" to see all available command.')
 while true do
 	dispatch_message ()
-	local cmd = socket.readstdin ()
-	if cmd then
-		handle_cmd (cmd)
-	else
-		socket.usleep (100)
-	end
+	-- local cmd = socket.readstdin ()
+	-- if cmd then
+	-- 	handle_cmd (cmd)
+	-- else
+		socket.usleep (500)
+	-- end
 end
 
