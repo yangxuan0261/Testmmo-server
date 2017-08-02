@@ -66,4 +66,14 @@ function timer_mgr:stop()
     end
 end
 
+function timer_mgr:set_interval(interval)
+    _interval = interval
+end
+
+function timer_mgr:reset_timer(id)
+    if _timer_tbl[id] then
+        _timer_tbl[id]:reset()
+    end
+end
+
 return timer_mgr

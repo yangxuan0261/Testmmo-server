@@ -24,10 +24,14 @@ end
 
 function timer:update ()
     if (skynet.now() - self._start_time) > self._interval then
-        print("--- timer:update,", self._start_time, skynet.now())
+        -- print("--- timer:update,", self._start_time, skynet.now())
         self._start_time = skynet.now()
         return self._func()
     end
+end
+
+function timer:reset ()
+    self._start_time = skynet.now()
 end
 
 return timer
