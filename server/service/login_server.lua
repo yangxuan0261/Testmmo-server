@@ -85,6 +85,7 @@ function CMD.cmd_server_save_auth_info (account, session, session_key, token)
         token = token,
     }
     saved_session[session] = info
+    syslog.debugf("--- cmd_server_save_auth_info success 111, account:%d", account)
 end
 
 function CMD.cmd_server_verify (session, token)
@@ -203,10 +204,16 @@ skynet.start (function ()
 
         local ok, ret = xpcall (f, traceback, ...)
         if not ok then
-            syslog.warnf ("handle message(%s) failed : %s", command, ret)
+            syslog.errorf ("handle message(%s) failed : %s", command, ret)
             -- kick_self ()
             return skynet.ret ()
         end
-        skynet.retpack (ret)
+        syslog.debugf ("handle message(%s) success 111", command)
+        if ret ~= nil then
+            skynet.retpack (ret)
+        else
+            skynet.ret ()
+        end
+        syslog.debugf ("handle message(%s) success 222", command)
     end)
 end)

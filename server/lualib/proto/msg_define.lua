@@ -35,6 +35,9 @@ end
 
 function MsgDefine.id_2_name(id)
     local v = id_tbl[id]
+    if v == nil then
+        print("---------- id_2_name, no rpc, id", id)
+    end
     return v.name
 end
 

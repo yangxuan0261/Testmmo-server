@@ -74,24 +74,30 @@ skynet.start (function ()
 	skynet.dispatch ("lua", function (_, _, mod, cmd, ...)
         local thisf = CMD[mod] -- 本服务的cmd方法
         if thisf then
+            syslog.debugf("--- database cmd:%s", mod)
             thisf(cmd, ...)
             return skynet.ret ()
         end
 
 		local m = MODULE[mod] -- 先找对应模块 character
 		if not m then
+            syslog.errorf("--- no module:%s", mod)
 			return skynet.ret ()
 		end
 		local f = m[cmd] -- 再找对应模块下对应的方法 character.reserve
 		if not f then
+            syslog.errorf("--- module:%s no cmd:%s", mod, cmd)
 			return skynet.ret ()
 		end
 		
-		local function ret (ok, ...)
+		local function ret (ok, res)
 			if not ok then
 				skynet.ret ()
+                syslog.errorf("--- module:%s exec cmd:%s fail", mod, cmd)
 			else
-				skynet.retpack (...) -- 返回执行结果
+                syslog.debugf("--- module:%s exec cmd:%s success 111", mod, cmd)
+				skynet.retpack (res) -- 返回执行结果
+                syslog.debugf("--- module:%s exec cmd:%s success 222", mod, cmd)
 			end
 
 		end

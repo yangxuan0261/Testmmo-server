@@ -43,7 +43,7 @@ local function heartBeatScheduler()
 end
 
 skynet.start (function ()
-    skynet.timeout(IntervalTime, heartBeatScheduler)
+    -- skynet.timeout(IntervalTime, heartBeatScheduler)
     skynet.dispatch ("lua", function (_, source, command, ...)
         local f = CMD[command]
         if not f then

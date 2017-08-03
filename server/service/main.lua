@@ -20,6 +20,6 @@ skynet.start(function()
 	local loginserver = skynet.newservice ("login_server")
 	skynet.call (loginserver, "lua", "open", login_config)	
 
-	local gamed = skynet.newservice ("gamed", loginserver)
-	skynet.call (gamed, "lua", "open", game_config)
+	-- local gamed = skynet.newservice ("gamed", loginserver)
+	-- skynet.call (gamed, "lua", "open", game_config)
 end)

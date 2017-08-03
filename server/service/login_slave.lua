@@ -6,6 +6,7 @@ local uuid = require "uuid"
 local dump = require "common.dump"
 local ProtoProcess = require "proto.proto_process"
 local netpack = require "skynet.netpack"
+local dbpacker = require "db.packer"
 
 local traceback = debug.traceback
 -- local assert = syslog.assert
@@ -46,8 +47,13 @@ function RPC.rpc_server_handshake (args)
     assert (args and args.name and args.client_pub, "invalid handshake request")
     syslog.debugf ("--- handshake, username:%s", args.name)
     local accInfo = skynet.call (database, "lua", "account", "cmd_account_load_by_name", args.name)
+    accInfo = dbpacker.unpack (accInfo)
+    syslog.debugf ("--- handshake, username 111")
+
     assert (accInfo, string.format("load account failed, account:%s ", args.name))
+    syslog.debugf ("--- handshake, username 222")
     assert (accInfo.verifier, "rpc_server_handshake, verifier failed")
+    syslog.debugf ("--- handshake, username 333")
     assert (args.client_pub, "rpc_server_handshake, client_pub failed")
     local session_key, _, pkey = srp.create_server_session_key (accInfo.verifier, args.client_pub)
     local challenge = srp.random ()
@@ -76,22 +82,29 @@ function RPC.rpc_server_auth (args)
     local session_key = auth_info.session_key
     local challenge = auth_info.challenge
 
+    syslog.debugf ("--- rpc_server_auth, username 111")
     assert (args and args.challenge, "invalid auth request")
+    syslog.debugf ("--- rpc_server_auth, username 222")
     local text = aes.decrypt (args.challenge, session_key)
     assert (challenge == text, "auth challenge failed")
+    syslog.debugf ("--- rpc_server_auth, username 333")
 
     local account = tonumber (accInfo.id)
     if not account then
+        syslog.debugf ("--- rpc_server_auth, username 334")
         assert (args.password)
+        syslog.debugf ("--- rpc_server_auth, username 335")
         account = uuid.gen ()
         local password = aes.decrypt (args.password, session_key)
+        syslog.debugf ("--- rpc_server_auth, username 336")
         skynet.call (database, "lua", "account", "cmd_account_create", account, accInfo.name, password)
-
+        syslog.debugf ("--- rpc_server_auth, username 444")
         local baseInfo = {}
     end
     
     challenge = srp.random ()
     local session = skynet.call (master, "lua", "cmd_server_get_session_id")
+    syslog.debugf ("--- rpc_server_auth, username 555")
 
     -- 保存 session
     auth_info.account = account
@@ -103,6 +116,7 @@ function RPC.rpc_server_auth (args)
         expire = session_expire_time_in_second,
         challenge = challenge,
     }
+    syslog.debugf ("--- rpc_server_auth, username 666")
     ProtoProcess.Write (user_fd, "rpc_client_auth", msg)
 end
 
@@ -110,17 +124,22 @@ local function get_challenge (secret)
     local sessioin_key = auth_info.session_key
     local challenge = auth_info.challenge
     local text = aes.decrypt (secret, sessioin_key)
+        syslog.debugf ("--- rpc_server_challenge, username 223")
     assert (text == challenge, "--- error, text != challenge")
+        syslog.debugf ("--- rpc_server_challenge, username 224")
 
     local token = srp.random ()
     return { token = token }
 end
 
 function RPC.rpc_server_challenge (args)
+        syslog.debugf ("--- rpc_server_challenge, username 111")
     assert (args and args.session and args.challenge)
+        syslog.debugf ("--- rpc_server_challenge, username 222")
     local retTab = get_challenge(args.challenge)
     local token = retTab["token"]
     assert (token)
+        syslog.debugf ("--- rpc_server_challenge, username 333")
     
     auth_info.token = token -- 更新 token
     -- 保存相关认证数据 token
@@ -136,6 +155,7 @@ function RPC.rpc_server_challenge (args)
         port = 9555,
     }
     ProtoProcess.Write (user_fd, "rpc_client_challenge", msg)
+        syslog.debugf ("--- rpc_server_challenge, username 444")
 
     close_fd(true)
 end
@@ -205,11 +225,18 @@ skynet.start (function ()
 
         local ok, ret = xpcall (f, traceback, ...)
         if not ok then
-            syslog.warnf ("login_slave, handle message(%s) failed : %s", command, ret)
+            syslog.errorf ("login_slave, handle message(%s) failed", command)
             -- kick_self ()
             return skynet.ret ()
         end
-        skynet.retpack (ret)
+
+        syslog.debugf ("login_slave, handle message(%s) success 111", command)
+        if ret ~= nil then
+            skynet.retpack (ret)
+        else
+            skynet.ret ()
+        end
+        syslog.debugf ("login_slave, handle message(%s) success 222", command)
     end)
 end)
 

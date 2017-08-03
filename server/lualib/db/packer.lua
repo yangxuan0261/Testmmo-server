@@ -1,14 +1,16 @@
-local cjson = require "cjson"
-cjson.encode_sparse_array(true, 1, 1)
+-- local cjson = require "cjson"
+-- cjson.encode_sparse_array(true, 1, 1)
+local Utils = require "common.utils"
+
 
 local packer = {}
 
 function packer.pack (v)
-	return cjson.encode (v)
+	return Utils.table_2_str(v)
 end
 
 function packer.unpack (v)
-	return cjson.decode (v)
+	return Utils.str_2_table(v)
 end
 
 return packer
